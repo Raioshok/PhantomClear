@@ -1,0 +1,551 @@
+
+import { useState, useRef, useEffect, useCallback } from "react"
+import { Link } from "react-router-dom"
+import { useLocation } from "react-router-dom"
+import {
+  LayoutDashboard,
+  Trash2,
+  UserMinus,
+  LogOut as LogOutIcon,
+  Phone,
+  PhoneOff,
+  MoveRight,
+  Timer,
+  MicOff,
+  VolumeX,
+  Users,
+  Anchor,
+  Shield,
+  Volume2,
+  Copy,
+  Info,
+  UserSearch,
+  Image,
+  Gamepad2,
+  Skull,
+  Settings,
+  Sparkles,
+  ChevronUp,
+  ChevronDown,
+  ChevronRight,
+  Plus,
+  Terminal,
+  Key,
+  BarChart3,
+  Archive,
+  Package,
+  User,
+  MessageSquare,
+  UserCog,
+  Server,
+  PhoneCall,
+  Database,
+  Wrench,
+  ListTodo,
+  Eye,
+  Radio,
+  Headphones,
+  Crosshair,
+  BellRing,
+  PieChart,
+} from "lucide-react"
+import { cn } from "@/lib/utils"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import {
+  Tooltip,
+  TooltipTrigger,
+  TooltipContent,
+} from "@/components/ui/tooltip"
+import { useTokens } from "@/hooks/use-tokens"
+import { AddAccountModal } from "./add-account-modal"
+import { ThemedIcon } from "@/components/themed-icon"
+import { XP_SECTION_ICONS, xpIconForRoute } from "@/lib/xp-icons"
+import { PonyCompanion } from './pony-atmosphere'
+
+interface ItemMenu {
+  titulo: string
+  icone: React.ReactNode
+  href: string
+}
+
+interface SecaoMenu {
+  titulo: string
+  icone: React.ReactNode
+  itens: ItemMenu[]
+  defaultOpen?: boolean
+  alwaysOpen?: boolean
+}
+
+const secoesMenu: SecaoMenu[] = [
+  {
+    titulo: "Geral",
+    icone: <LayoutDashboard size={16} />,
+    defaultOpen: true,
+    alwaysOpen: true,
+    itens: [
+      { titulo: "Visão Geral", icone: <LayoutDashboard size={16} />, href: "/" },
+      { titulo: "Perfil", icone: <User size={16} />, href: "/perfil" },
+      { titulo: "Analytics", icone: <BarChart3 size={16} />, href: "/analytics" },
+    ],
+  },
+  {
+    titulo: "Mensagens",
+    icone: <MessageSquare size={16} />,
+    itens: [
+      { titulo: "Limpar DM", icone: <Trash2 size={16} />, href: "/limpar-dm" },
+      { titulo: "Limpar DM dos Amigos", icone: <Trash2 size={16} />, href: "/limpar-dm-amigos" },
+      { titulo: "Limpar DMs Abertas", icone: <Trash2 size={16} />, href: "/limpar-dms" },
+      { titulo: "Limpar Package", icone: <Package size={16} />, href: "/limpar-package" },
+      { titulo: "Abrir DMs", icone: <MessageSquare size={16} />, href: "/abrir-dms" },
+      { titulo: "Fechar DMs", icone: <PhoneOff size={16} />, href: "/fechar-dms" },
+    ],
+  },
+  {
+    titulo: "Conta",
+    icone: <UserCog size={16} />,
+    itens: [
+      { titulo: "Remover Amigos", icone: <UserMinus size={16} />, href: "/remover-amigos" },
+      { titulo: "Sair de Servidores", icone: <LogOutIcon size={16} />, href: "/sair-servidores" },
+    ],
+  },
+  {
+    titulo: "Servidores",
+    icone: <Server size={16} />,
+    itens: [
+      { titulo: "Clonar Servidor", icone: <Copy size={16} />, href: "/clonar-servidor" },
+      { titulo: "Scraper Ícones", icone: <Image size={16} />, href: "/scraper-icones" },
+    ],
+  },
+  {
+    titulo: "Call",
+    icone: <PhoneCall size={16} />,
+    itens: [
+      { titulo: "Desconectar Call", icone: <PhoneOff size={16} />, href: "/desconectar-call" },
+      { titulo: "Mover Call", icone: <MoveRight size={16} />, href: "/mover-call" },
+      { titulo: "Farm Call", icone: <Timer size={16} />, href: "/farm-call" },
+      { titulo: "Mutar Call", icone: <MicOff size={16} />, href: "/mutar-call" },
+      { titulo: "Ensurdecer Call", icone: <VolumeX size={16} />, href: "/ensurdecer-call" },
+      { titulo: "Listar Call", icone: <Users size={16} />, href: "/listar-call" },
+      { titulo: "Elevador", icone: <MoveRight size={16} />, href: "/elevador" },
+      { titulo: "Coleira", icone: <Anchor size={16} />, href: "/coleira" },
+      { titulo: "Proteger User", icone: <Shield size={16} />, href: "/proteger-user" },
+      { titulo: "Tormentar", icone: <Crosshair size={16} />, href: "/tormentar" },
+    ],
+  },
+  {
+    titulo: "Dados",
+    icone: <Database size={16} />,
+    itens: [
+      { titulo: "Análise de Package", icone: <PieChart size={16} />, href: "/analise-package" },
+      { titulo: "Backups", icone: <Archive size={16} />, href: "/backups" },
+    ],
+  },
+  {
+    titulo: "Monitoramento",
+    icone: <Eye size={16} />,
+    itens: [
+      { titulo: "Dashboard", icone: <Radio size={16} />, href: "/monitoramento" },
+      { titulo: "Alertas", icone: <BellRing size={16} />, href: "/alertas" },
+      { titulo: "Configuração", icone: <Settings size={16} />, href: "/monitoramento/config" },
+    ],
+  },
+  {
+    titulo: "Sistema",
+    icone: <Wrench size={16} />,
+    alwaysOpen: true,
+    itens: [
+      { titulo: "Tasks", icone: <ListTodo size={16} />, href: "/tasks" },
+      { titulo: "Prefix Commands", icone: <Terminal size={16} />, href: "/prefix-commands" },
+      { titulo: "Rich Presence", icone: <Gamepad2 size={16} />, href: "/rpc" },
+      { titulo: "Configurações", icone: <Settings size={16} />, href: "/configuracoes" },
+    ],
+  },
+]
+
+function AppVersion() {
+  const [version, setVersion] = useState(import.meta.env.VITE_APP_VERSION || '...')
+  useEffect(() => {
+    window.electronAPI?.updater?.getVersion?.().then((v: string) => {
+      if (v) setVersion(v)
+    }).catch(() => {})
+  }, [])
+  return (
+    <span className="app-version self-start rounded-full border border-primary/20 bg-primary/10 px-2 py-0.5 font-mono text-[9px] font-semibold leading-none text-primary shadow-xs">
+      v{version}
+    </span>
+  )
+}
+
+export function Sidebar() {
+  const caminhoAtual = useLocation().pathname
+  const { tokens, activeTokenId, switchAccount, connecting, switchCooldownRemaining, removeToken, refetch } = useTokens()
+  const [contasAbertas, setContasAbertas] = useState(false)
+  const [addModalOpen, setAddModalOpen] = useState(false)
+  const contasRef = useRef<HTMLDivElement>(null)
+
+  const [secoesAbertas, setSecoesAbertas] = useState<Record<string, boolean>>(() => {
+    const initial: Record<string, boolean> = {}
+    for (const secao of secoesMenu) {
+      if (secao.defaultOpen) {
+        initial[secao.titulo] = true
+      }
+    }
+    return initial
+  })
+
+  const secaoAtiva = secoesMenu.find((s) => s.itens.some((i) => i.href === caminhoAtual))
+  if (secaoAtiva && !secoesAbertas[secaoAtiva.titulo]) {
+    secoesAbertas[secaoAtiva.titulo] = true
+  }
+
+  const toggleSecao = (titulo: string) => {
+    setSecoesAbertas((prev) => ({ ...prev, [titulo]: !prev[titulo] }))
+  }
+
+  const contaAtiva = tokens.find((t) => t.id === activeTokenId) || tokens[0]
+
+  const outrasContas = tokens.filter((t) => t.id !== activeTokenId)
+
+  const switchOnCooldown = switchCooldownRemaining > 0
+  const cooldownSeconds = Math.ceil(switchCooldownRemaining / 1000)
+
+  const [contextMenu, setContextMenu] = useState<{ tokenId: string; x: number; y: number } | null>(null)
+  const contextMenuRef = useRef<HTMLDivElement>(null)
+
+  const handleContextMenu = useCallback((e: React.MouseEvent, tokenId: string) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setContextMenu({ tokenId, x: e.clientX, y: e.clientY })
+  }, [])
+
+  const removerConta = useCallback(async (id: string) => {
+    setContextMenu(null)
+    await removeToken(id)
+    if (tokens.length <= 1) {
+      setContasAbertas(false)
+    }
+  }, [removeToken, tokens.length])
+
+  const handleRemoverConta = useCallback(async () => {
+    if (!contextMenu) return
+    await removerConta(contextMenu.tokenId)
+  }, [contextMenu, removerConta])
+
+  useEffect(() => {
+    if (!contextMenu) return
+    const handleClick = () => setContextMenu(null)
+    window.addEventListener('click', handleClick)
+    window.addEventListener('contextmenu', handleClick)
+    return () => {
+      window.removeEventListener('click', handleClick)
+      window.removeEventListener('contextmenu', handleClick)
+    }
+  }, [contextMenu])
+
+  const trocarConta = async (tokenId: string) => {
+    const target = tokens.find((t) => t.id === tokenId)
+    setContasAbertas(false)
+    try {
+      await switchAccount(tokenId)
+      if (target) {
+        window.electronAPI?.notification.show({
+          title: "PhantomClear",
+          body: `Logado como ${target.user?.global_name || target.user?.username || target.label}`,
+          icon: target.avatarUrl || undefined,
+        })
+      }
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : ''
+      if (msg.startsWith('Aguarde')) {
+        window.electronAPI?.notification.show({
+          title: "PhantomClear",
+          body: msg,
+        })
+      } else if (target) {
+        window.electronAPI?.notification.show({
+          title: "PhantomClear",
+          body: `Falha ao conectar em ${target.user?.global_name || target.user?.username || target.label}`,
+        })
+      }
+    }
+  }
+
+  return (
+    <>
+      <aside className="app-sidebar fixed left-0 top-0 z-40 flex h-screen w-64 flex-col border-r border-border/70 bg-sidebar/95 backdrop-blur-xl">
+        <div
+          className="app-brand relative flex h-16 shrink-0 select-none items-center gap-3 border-b border-border/60 bg-sidebar/80 px-5 backdrop-blur-md"
+          style={{ WebkitAppRegion: 'drag' } as React.CSSProperties}
+        >
+          <div aria-hidden="true" className="pointer-events-none absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-primary/20 bg-primary/10 p-1 shadow-[0_0_16px_color-mix(in_srgb,var(--primary)_15%,transparent)] transition-transform duration-200 hover:scale-105">
+            <img
+              src="/icon.png"
+              alt="PhantomClear"
+              draggable={false}
+              className="h-8 w-8 rounded-lg object-cover"
+            />
+          </div>
+          <div className="flex min-w-0 flex-col gap-1.5">
+            <span className="app-brand-name text-[15px] font-bold leading-none tracking-tight text-foreground">
+              PhantomClear
+            </span>
+            <AppVersion />
+          </div>
+        </div>
+
+        <nav className="app-sidebar-nav flex-1 overflow-y-auto px-3 py-4 space-y-1" aria-label="Menu principal">
+          {secoesMenu.map((secao) => {
+            const aberta = secao.alwaysOpen || !!secoesAbertas[secao.titulo]
+            return (
+              <div key={secao.titulo} className="app-nav-section">
+                {secao.alwaysOpen ? (
+                  <div className="app-section-label flex items-center gap-2 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70">
+                    <ThemedIcon name={XP_SECTION_ICONS[secao.titulo]} className="text-muted-foreground/60">{secao.icone}</ThemedIcon>
+                    <span>{secao.titulo}</span>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    aria-expanded={aberta}
+                    onClick={() => toggleSecao(secao.titulo)}
+                    className="app-section-toggle flex w-full items-center gap-2 rounded-xl px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 hover:bg-secondary/60 hover:text-foreground transition-all duration-150"
+                  >
+                    <ThemedIcon name={XP_SECTION_ICONS[secao.titulo]} className="text-muted-foreground/60">{secao.icone}</ThemedIcon>
+                    <span className="flex-1 text-left">{secao.titulo}</span>
+                    <ChevronDown
+                      size={14}
+                      className={cn(
+                        "transition-transform duration-200 text-muted-foreground/60",
+                        !aberta && "-rotate-90"
+                      )}
+                    />
+                  </button>
+                )}
+                <div
+                  className={secao.alwaysOpen ? undefined : "overflow-hidden transition-all duration-200"}
+                  style={secao.alwaysOpen ? undefined : {
+                    maxHeight: aberta ? `${secao.itens.length * 44}px` : '0px',
+                    opacity: aberta ? 1 : 0,
+                  }}
+                >
+                  <ul className="space-y-0.5 py-1 pl-2">
+                    {secao.itens.map((item) => {
+                      const estaAtivo = caminhoAtual === item.href
+                      return (
+                        <li key={item.titulo}>
+                          <Link
+                            to={item.href}
+                            aria-current={estaAtivo ? "page" : undefined}
+                            className={cn(
+                              "app-nav-link relative flex items-center gap-3 rounded-xl px-3 py-2 text-xs font-medium transition-all duration-150",
+                              estaAtivo
+                                ? "bg-primary/10 text-primary font-semibold border border-primary/20 shadow-[0_0_14px_color-mix(in_srgb,var(--primary)_15%,transparent),inset_0_1px_0_rgba(255,255,255,0.08)]"
+                                : "text-muted-foreground/90 hover:bg-secondary/60 hover:text-foreground hover:translate-x-0.5"
+                            )}
+                          >
+                            <ThemedIcon name={xpIconForRoute(item.href)} className={cn(estaAtivo ? "text-primary" : "text-muted-foreground/70")}>
+                              {item.icone}
+                            </ThemedIcon>
+                            <span className="flex-1">{item.titulo}</span>
+                            {estaAtivo && (
+                              <span className="h-1.5 w-1.5 rounded-full bg-primary shadow-[0_0_6px_var(--primary)] shrink-0" />
+                            )}
+                          </Link>
+                        </li>
+                      )
+                    })}
+                  </ul>
+                </div>
+              </div>
+            )
+          })}
+        </nav>
+
+        <PonyCompanion />
+        <div className="app-account-panel border-t border-border/60 bg-sidebar/40 p-3">
+          {contaAtiva ? (
+            <div>
+              <div
+                ref={contasRef}
+                style={{
+                  height: contasAbertas ? 'auto' : 0,
+                  opacity: contasAbertas ? 1 : 0,
+                  transition: 'opacity 150ms ease-out',
+                  overflow: 'hidden',
+                }}
+              >
+                <div className="mb-2 rounded-2xl border border-border/60 bg-secondary/40 p-1.5 shadow-sm">
+                  <button
+                    onClick={() => setAddModalOpen(true)}
+                    className="flex w-full items-center gap-2.5 rounded-xl px-2.5 py-2 text-muted-foreground transition-all hover:bg-secondary/80 hover:text-foreground"
+                  >
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full border border-dashed border-muted-foreground/40 shrink-0">
+                      <Plus size={14} />
+                    </div>
+                    <span className="text-[13px] font-medium">Adicionar conta</span>
+                  </button>
+
+                  {outrasContas.length > 0 && (
+                    <div className="space-y-0.5 mt-1 border-t border-border/40 pt-1">
+                      {outrasContas.map((token) => (
+                        <div
+                          key={token.id}
+                          onContextMenu={(e) => handleContextMenu(e, token.id)}
+                          className="group/conta flex items-center rounded-xl transition-all hover:bg-secondary/80"
+                        >
+                          <button
+                            onClick={() => trocarConta(token.id)}
+                            disabled={connecting || switchOnCooldown}
+                            className="flex flex-1 min-w-0 items-center gap-2.5 rounded-xl px-2.5 py-2 disabled:opacity-50"
+                          >
+                            <Avatar className="h-8 w-8 shrink-0 ring-1 ring-border/80">
+                              <AvatarImage src={token.avatarUrl} alt={token.label} />
+                              <AvatarFallback className="bg-primary/10 text-primary text-xs">
+                                {token.label.charAt(0).toUpperCase()}
+                              </AvatarFallback>
+                            </Avatar>
+                            <div className="flex flex-col items-start flex-1 min-w-0">
+                              <div className="flex items-center gap-1 w-full">
+                                <span className="text-[13px] font-medium truncate text-left text-foreground/90">
+                                  {token.user?.global_name || token.user?.username || token.label}
+                                </span>
+                                {token.badges && token.badges.length > 0 && (
+                                  <div className="flex items-center gap-px shrink-0">
+                                    {token.badges.map((badge) => (
+                                      <Tooltip key={badge.name}>
+                                        <TooltipTrigger asChild>
+                                          <img src={badge.url} alt={badge.tooltip} className="h-3.5 w-3.5" />
+                                        </TooltipTrigger>
+                                        <TooltipContent side="top" className="text-xs">{badge.tooltip}</TooltipContent>
+                                      </Tooltip>
+                                    ))}
+                                  </div>
+                                )}
+                              </div>
+                              {token.user?.username && token.user?.global_name && (
+                                <span className="text-[10px] text-muted-foreground truncate w-full text-left">
+                                  {token.user.username}
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                          <Tooltip>
+                            <TooltipTrigger asChild>
+                              <button
+                                onClick={() => removerConta(token.id)}
+                                className="mr-1 shrink-0 rounded-lg p-1.5 text-muted-foreground opacity-0 transition-all hover:bg-destructive/10 hover:text-destructive group-hover/conta:opacity-100"
+                              >
+                                <Trash2 size={14} />
+                              </button>
+                            </TooltipTrigger>
+                            <TooltipContent side="right" className="text-xs">Remover conta</TooltipContent>
+                          </Tooltip>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              <div className="group flex items-center rounded-2xl border border-border/50 bg-secondary/30 p-1 transition-all hover:bg-secondary/60 hover:border-border/80 hover:shadow-xs">
+                <button
+                  onClick={() => setContasAbertas(!contasAbertas)}
+                  onContextMenu={(e) => handleContextMenu(e, contaAtiva.id)}
+                  className="flex flex-1 min-w-0 items-center gap-3 rounded-xl p-2"
+                >
+                  <div className="relative">
+                    <Avatar className="h-9 w-9 ring-2 ring-primary/30 ring-offset-1 ring-offset-sidebar shadow-xs">
+                      <AvatarImage src={contaAtiva.avatarUrl} alt={contaAtiva.label} />
+                      <AvatarFallback className="bg-primary/10 text-primary text-sm font-semibold">
+                        {contaAtiva.label.charAt(0).toUpperCase()}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className={cn(
+                      "absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-sidebar shadow-xs",
+                      contaAtiva.status === "valid" ? "bg-emerald-500" : contaAtiva.status === "checking" ? "bg-amber-500" : "bg-red-500"
+                    )} />
+                  </div>
+                  <div className="flex flex-1 flex-col items-start min-w-0">
+                    <div className="flex items-center gap-1.5 w-full">
+                      <span className="text-sm font-bold text-foreground truncate text-left">
+                        {contaAtiva.user?.global_name || contaAtiva.user?.username || contaAtiva.label}
+                      </span>
+                      {contaAtiva.badges && contaAtiva.badges.length > 0 && (
+                        <div className="flex items-center gap-0.5 shrink-0">
+                          {contaAtiva.badges.map((badge) => (
+                            <Tooltip key={badge.name}>
+                              <TooltipTrigger asChild>
+                                <img src={badge.url} alt={badge.tooltip} className="h-4 w-4" />
+                              </TooltipTrigger>
+                              <TooltipContent side="top" className="text-xs">{badge.tooltip}</TooltipContent>
+                            </Tooltip>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                    <span className="text-[11px] text-muted-foreground font-medium">
+                      {connecting ? "Conectando..." : switchOnCooldown ? `Aguarde ${cooldownSeconds}s` : contaAtiva.status === "valid" ? "Conectada" : contaAtiva.status === "checking" ? "Verificando..." : "Inválida"}
+                    </span>
+                  </div>
+                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      onClick={() => removerConta(contaAtiva.id)}
+                      className="shrink-0 rounded-lg p-1.5 text-muted-foreground opacity-0 transition-all hover:bg-destructive/10 hover:text-destructive group-hover:opacity-100"
+                    >
+                      <Trash2 size={14} />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="right" className="text-xs">Remover conta</TooltipContent>
+                </Tooltip>
+                <button
+                  onClick={() => setContasAbertas(!contasAbertas)}
+                  className="shrink-0 rounded-lg p-1.5 text-muted-foreground transition-colors hover:text-foreground hover:bg-secondary/80"
+                >
+                  <ChevronUp size={16} className={cn(
+                    "transition-transform duration-200",
+                    contasAbertas && "rotate-180"
+                  )} />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setAddModalOpen(true)}
+              className="flex w-full items-center gap-3 rounded-2xl border border-dashed border-border/80 p-3 text-muted-foreground transition-all hover:bg-secondary/60 hover:text-foreground hover:border-primary/40"
+            >
+              <div className="flex h-8 w-8 items-center justify-center rounded-full border border-dashed border-border/90">
+                <Plus size={14} />
+              </div>
+              <span className="text-sm font-medium">Adicionar conta</span>
+            </button>
+          )}
+        </div>
+      </aside>
+
+      {contextMenu && (
+        <div
+          ref={contextMenuRef}
+          className="fixed z-[100] min-w-[160px] rounded-lg border border-border bg-popover p-1 shadow-lg animate-in fade-in-0 zoom-in-95"
+          style={{ top: contextMenu.y, left: contextMenu.x }}
+        >
+          <button
+            onClick={handleRemoverConta}
+            className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-sm text-red-400 hover:bg-red-500/10 transition-colors"
+          >
+            <Trash2 size={14} />
+            Remover conta
+          </button>
+        </div>
+      )}
+
+      <AddAccountModal
+        open={addModalOpen}
+        onClose={() => setAddModalOpen(false)}
+        onAdded={() => refetch()}
+      />
+    </>
+  )
+}
