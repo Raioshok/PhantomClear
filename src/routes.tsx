@@ -42,6 +42,10 @@ const SairServidores = lazy(() => import('./app/(dashboard)/sair-servidores/page
 const ScraperIcones = lazy(() => import('./app/(dashboard)/scraper-icones/page'))
 const Tasks = lazy(() => import('./app/(dashboard)/tasks/page'))
 const Tormentar = lazy(() => import('./app/(dashboard)/tormentar/page'))
+const SolicitacoesAmizade = lazy(() => import('./app/(dashboard)/solicitacoes-amizade/page'))
+const StatusRotator = lazy(() => import('./app/(dashboard)/status-rotator/page'))
+const AutoResponder = lazy(() => import('./app/(dashboard)/auto-responder/page'))
+const Webhooks = lazy(() => import('./app/(dashboard)/webhooks/page'))
 
 const MonitoramentoUserLayout = lazy(() => import('./app/(dashboard)/monitoramento/u/[userId]/layout'))
 
@@ -100,6 +104,10 @@ export function AppRoutes() {
           <Route path="scraper-icones" element={<ScraperIcones />} />
           <Route path="tasks" element={<Tasks />} />
           <Route path="tormentar" element={<Tormentar />} />
+          <Route path="solicitacoes-amizade" element={<SolicitacoesAmizade />} />
+          <Route path="status-rotator" element={<StatusRotator />} />
+          <Route path="auto-responder" element={<AutoResponder />} />
+          <Route path="webhooks" element={<Webhooks />} />
         </Route>
       </Routes>
     </Suspense>

@@ -15,6 +15,10 @@ import { callUtilsRoutes } from './call-utils'
 import { prefixCommandsRoutes } from './prefix-commands'
 import { monitoringRoutes } from './monitoring'
 import { keywordAlertsRoutes } from './keyword-alerts'
+import { accountToolsRoutes } from './account-tools'
+import { statusRotatorRoutes } from './status-rotator'
+import { autoResponderRoutes } from './auto-responder'
+import { webhooksRoutes } from './webhooks'
 
 const featureRouter = Router()
 
@@ -34,5 +38,9 @@ featureRouter.use('/', callUtilsRoutes)
 featureRouter.use('/', prefixCommandsRoutes)
 featureRouter.use('/', monitoringRoutes)
 featureRouter.use('/', keywordAlertsRoutes)
+featureRouter.use('/', accountToolsRoutes)
+featureRouter.use('/', statusRotatorRoutes)
+featureRouter.use('/', autoResponderRoutes)
+featureRouter.use('/', webhooksRoutes)
 
 export default featureRouter

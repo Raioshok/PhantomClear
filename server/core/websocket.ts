@@ -218,3 +218,6 @@ class WebSocketManager {
 }
 
 export const wsManager = new WebSocketManager()
+export function broadcastWSEvent(event: string, data: unknown) {
+  wsManager.broadcast(event, data)
+}

@@ -198,6 +198,26 @@ class ApiClient {
   getStatus() { return this.get('/status') }
   getLogs(limit?: number) { return this.get(`/logs${limit ? `?limit=${limit}` : ''}`) }
   clearLogs() { return this.delete('/logs') }
+
+  // Account Tools & HypeSquad
+  getRelationships() { return this.get<{ incoming: any[]; outgoing: any[]; friends: any[]; blocked: any[] }>('/tools/account/relationships') }
+  acceptAllFriendRequests(delay = 1000) { return this.post<{ taskId: string; total: number }>('/tools/account/relationships/accept-all', { delay }) }
+  cancelAllOutgoingRequests(delay = 800) { return this.post<{ taskId: string; total: number }>('/tools/account/relationships/cancel-outgoing', { delay }) }
+  setHypeSquad(houseId: number) { return this.post<{ success: boolean; houseId: number }>('/tools/account/hypesquad', { houseId }) }
+
+  // Status & Bio Rotator
+  getStatusRotator() { return this.get<any>('/tools/status-rotator') }
+  updateStatusRotator(cfg: any) { return this.post<any>('/tools/status-rotator', cfg) }
+
+  // Auto-Responder & Nitro Sniffer
+  getAutoResponderConfig() { return this.get<any>('/tools/auto-responder/config') }
+  updateAutoResponderConfig(cfg: any) { return this.post<any>('/tools/auto-responder/config', cfg) }
+  getAutoResponderLogs() { return this.get<any>('/tools/auto-responder/logs') }
+
+  // Webhook Tools
+  testWebhook(webhookUrl: string) { return this.post<any>('/tools/webhooks/test', { webhookUrl }) }
+  sendWebhook(payload: any) { return this.post<any>('/tools/webhooks/send', payload) }
+  spamWebhook(payload: any) { return this.post<any>('/tools/webhooks/spam', payload) }
 }
 
 export const api = new ApiClient()

@@ -28,6 +28,10 @@ import {
   ChevronUp,
   ChevronDown,
   ChevronRight,
+  UserCheck,
+  Webhook,
+  RotateCw,
+  Bot,
   Plus,
   Terminal,
   Key,
@@ -106,6 +110,7 @@ const secoesMenu: SecaoMenu[] = [
     itens: [
       { titulo: "Remover Amigos", icone: <UserMinus size={16} />, href: "/remover-amigos" },
       { titulo: "Sair de Servidores", icone: <LogOutIcon size={16} />, href: "/sair-servidores" },
+      { titulo: "Solicitações & HypeSquad", icone: <UserCheck size={16} />, href: "/solicitacoes-amizade" },
     ],
   },
   {
@@ -114,6 +119,7 @@ const secoesMenu: SecaoMenu[] = [
     itens: [
       { titulo: "Clonar Servidor", icone: <Copy size={16} />, href: "/clonar-servidor" },
       { titulo: "Scraper Ícones", icone: <Image size={16} />, href: "/scraper-icones" },
+      { titulo: "Webhooks", icone: <Webhook size={16} />, href: "/webhooks" },
     ],
   },
   {
@@ -155,6 +161,8 @@ const secoesMenu: SecaoMenu[] = [
     alwaysOpen: true,
     itens: [
       { titulo: "Tasks", icone: <ListTodo size={16} />, href: "/tasks" },
+      { titulo: "Status Rotator", icone: <RotateCw size={16} />, href: "/status-rotator" },
+      { titulo: "Auto-Responder", icone: <Bot size={16} />, href: "/auto-responder" },
       { titulo: "Prefix Commands", icone: <Terminal size={16} />, href: "/prefix-commands" },
       { titulo: "Rich Presence", icone: <Gamepad2 size={16} />, href: "/rpc" },
       { titulo: "Configurações", icone: <Settings size={16} />, href: "/configuracoes" },

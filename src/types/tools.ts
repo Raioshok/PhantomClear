@@ -36,6 +36,9 @@ export type ToolType =
   | 'limpar-dm-amigos'
   | 'call-utils'
   | 'prefix-commands'
+  | 'accept-requests'
+  | 'cancel-outgoing-requests'
+  | 'webhook-spam'
 
 export type ToolCategory = 'mensagens' | 'servidores' | 'social' | 'utilidades'
 
