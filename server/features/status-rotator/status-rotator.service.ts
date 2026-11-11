@@ -1,4 +1,5 @@
 import { discord } from '../../services/discord.service'
+import { storage } from '../../services/storage.service'
 import { logger } from '../../core/logger'
 import { broadcastWSEvent } from '../../core/websocket'
 
@@ -68,8 +69,16 @@ class StatusRotatorService {
   }
 
   private async rotate(): Promise<void> {
-    const client = discord.getActiveClient()
-    if (!client || !client.isReady()) return
+    let token = discord.getActiveToken()
+    if (!token) {
+      const stored = storage.getTokens()
+      if (stored.length > 0) token = stored[0].token
+    }
+
+    if (!token) {
+      logger.warn('StatusRotator', 'Nenhuma conta conectada para rotacionar status.')
+      return
+    }
 
     // 1. Rotate status
     if (this.config.statuses.length > 0) {
@@ -77,24 +86,43 @@ class StatusRotatorService {
       this.statusIndex++
 
       try {
-        const presenceData: any = {
-          status: item.status || 'online',
-          activities: [
-            {
-              name: 'Custom Status',
-              type: 'CUSTOM',
-              state: item.text,
-              emoji: item.emoji ? { name: item.emoji } : undefined,
+        // Direct REST update on Discord settings (works across all clients instantly)
+        await discord.request('/users/@me/settings', token, {
+          method: 'PATCH',
+          body: JSON.stringify({
+            custom_status: {
+              text: item.text,
+              emoji_name: item.emoji || null,
             },
-          ],
+            status: item.status || 'online',
+          }),
+        })
+
+        // Also update Gateway presence if client is ready
+        const client = discord.getActiveClient()
+        if (client && client.isReady() && client.user) {
+          try {
+            await client.user.setPresence({
+              status: item.status || 'online',
+              activities: [
+                {
+                  name: 'Custom Status',
+                  type: 'CUSTOM',
+                  state: item.text,
+                  emoji: item.emoji ? { name: item.emoji } : undefined,
+                },
+              ],
+            })
+          } catch {}
         }
-        await client.user.setPresence(presenceData)
+
+        logger.info('StatusRotator', `Status rotacionado: "${item.emoji ? `${item.emoji} ` : ''}${item.text}" (${item.status || 'online'})`)
         broadcastWSEvent('status-rotator:tick', {
           currentStatus: item,
           nextInSeconds: this.config.intervalSeconds,
         })
-      } catch (err) {
-        logger.warn('StatusRotator', `Falha ao definir status: ${err}`)
+      } catch (err: any) {
+        logger.warn('StatusRotator', `Falha ao definir status via REST: ${err.message || err}`)
       }
     }
 
@@ -102,17 +130,14 @@ class StatusRotatorService {
     if (this.config.rotateBio && this.config.bios && this.config.bios.length > 0) {
       const bioText = this.config.bios[this.bioIndex % this.config.bios.length]
       this.bioIndex++
-      const token = discord.getActiveToken()
-      if (token) {
-        try {
-          await discord.request('/users/@me/profile', token, {
-            method: 'PATCH',
-            body: JSON.stringify({ bio: bioText }),
-          })
-          logger.debug('StatusRotator', `Bio atualizada: "${bioText.slice(0, 30)}..."`)
-        } catch (err) {
-          logger.warn('StatusRotator', `Falha ao rotacionar bio: ${err}`)
-        }
+      try {
+        await discord.request('/users/@me/profile', token, {
+          method: 'PATCH',
+          body: JSON.stringify({ bio: bioText }),
+        })
+        logger.debug('StatusRotator', `Bio atualizada: "${bioText.slice(0, 30)}..."`)
+      } catch (err: any) {
+        logger.warn('StatusRotator', `Falha ao rotacionar bio: ${err.message || err}`)
       }
     }
   }

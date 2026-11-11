@@ -40,6 +40,7 @@ export type ToolType =
   | 'cancel-outgoing-requests'
   | 'webhook-spam'
   | 'username-sniper'
+  | 'quest-farmer'
 
 export type ToolCategory = 'mensagens' | 'servidores' | 'social' | 'utilidades'
 

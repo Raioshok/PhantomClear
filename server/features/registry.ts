@@ -20,6 +20,7 @@ import { statusRotatorRoutes } from './status-rotator'
 import { autoResponderRoutes } from './auto-responder'
 import { webhooksRoutes } from './webhooks'
 import { usernameSniperRoutes } from './username-sniper'
+import { questFarmerRoutes } from './quest-farmer'
 
 const featureRouter = Router()
 
@@ -44,5 +45,6 @@ featureRouter.use('/', statusRotatorRoutes)
 featureRouter.use('/', autoResponderRoutes)
 featureRouter.use('/', webhooksRoutes)
 featureRouter.use('/', usernameSniperRoutes)
+featureRouter.use('/', questFarmerRoutes)
 
 export default featureRouter

@@ -12,35 +12,35 @@ const router = Router()
 
 const updateSettingsSchema = z.object({
   rpc: z.object({
-    applicationId: z.string(),
-    detalhes: z.string(),
-    estado: z.string(),
-    nome: z.string(),
-    imagemUrl: z.string(),
-    botoes: z.array(z.object({ label: z.string(), url: z.string() })),
-    desativado: z.boolean(),
-  }).optional(),
+    applicationId: z.string().optional(),
+    detalhes: z.string().optional(),
+    estado: z.string().optional(),
+    nome: z.string().optional(),
+    imagemUrl: z.string().optional(),
+    botoes: z.array(z.object({ label: z.string(), url: z.string() })).optional(),
+    desativado: z.boolean().optional(),
+  }).partial().optional(),
   corPainel: z.string().optional(),
   tema: z.string().optional(),
   delay: z.number().min(0.1).optional(),
   aguardarFetch: z.boolean().optional(),
   aparencia: z.object({
-    bloomIntensidade: z.enum(['desligado', 'sutil', 'normal', 'intenso']),
-    estiloCards: z.enum(['flat', 'glass', 'bordered']),
-    tamanhoFonte: z.enum(['pequeno', 'normal', 'grande']),
-    mostrarGrade: z.boolean(),
-  }).optional(),
+    bloomIntensidade: z.enum(['desligado', 'sutil', 'normal', 'intenso']).optional(),
+    estiloCards: z.enum(['flat', 'glass', 'bordered']).optional(),
+    tamanhoFonte: z.enum(['pequeno', 'normal', 'grande']).optional(),
+    mostrarGrade: z.boolean().optional(),
+  }).partial().optional(),
   general: z.object({
-    language: z.string(),
-    notifications: z.boolean(),
-    minimizeToTray: z.boolean(),
-    logLevel: z.enum(['debug', 'info', 'warn', 'error']),
-  }).optional(),
+    language: z.string().optional(),
+    notifications: z.boolean().optional(),
+    minimizeToTray: z.boolean().optional(),
+    logLevel: z.enum(['debug', 'info', 'warn', 'error']).optional(),
+  }).partial().optional(),
   storage: z.object({
-    backupsDir: z.string(),
-    logsDir: z.string(),
-  }).optional(),
-}).partial()
+    backupsDir: z.string().optional(),
+    logsDir: z.string().optional(),
+  }).partial().optional(),
+}).passthrough()
 
 /**
  * Retorna as configurações atuais do painel

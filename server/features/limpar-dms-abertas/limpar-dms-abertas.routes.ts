@@ -17,24 +17,55 @@ const limparDmsAbertasSchema = z.object({
 
 router.get('/limpar-dms-abertas/channels', asyncHandler(async (_req, res) => {
   const { discord } = await import('../../services/discord.service')
-  const client = discord.getActiveClient()
-  if (!client || !client.isReady()) {
+  const { storage } = await import('../../services/storage.service')
+  const token = discord.getActiveToken() || storage.getTokens()[0]?.token
+
+  if (!token) {
     throw Object.assign(new Error('Nenhuma conta conectada'), { statusCode: 400 })
   }
 
-  const dms = client.channels.cache
-    .filter((c: any) => c.type === 'DM' || c.type === 1)
-    .map((c: any) => {
-      const recipient = c.recipient
-      return {
-        id: c.id,
-        recipientId: recipient?.id,
-        username: recipient?.username || 'Desconhecido',
-        globalName: recipient?.globalName || null,
-        avatar: recipient?.avatar || null,
-        lastMessageId: c.lastMessageId,
+  const dms: Array<{ id: string; recipientId: string; username: string; globalName: string | null; avatar: string | null; lastMessageId: string }> = []
+
+  // Try direct Discord REST API first
+  try {
+    const rawChannels = await discord.request<any[]>('/users/@me/channels', token)
+    if (Array.isArray(rawChannels)) {
+      for (const ch of rawChannels) {
+        if (ch.type === 1 || ch.type === 'DM') {
+          const rec = ch.recipients && ch.recipients[0] ? ch.recipients[0] : null
+          dms.push({
+            id: ch.id,
+            recipientId: rec?.id || '',
+            username: rec?.username || 'Desconhecido',
+            globalName: rec?.global_name || null,
+            avatar: rec?.avatar ? `https://cdn.discordapp.com/avatars/${rec.id}/${rec.avatar}.png` : null,
+            lastMessageId: ch.last_message_id || '',
+          })
+        }
       }
-    })
+    }
+  } catch {}
+
+  // Fallback to client cache
+  if (dms.length === 0) {
+    const client = discord.getActiveClient()
+    if (client && client.channels?.cache) {
+      const cached = client.channels.cache
+        .filter((c: any) => c.type === 'DM' || c.type === 1)
+        .map((c: any) => {
+          const recipient = c.recipient
+          return {
+            id: c.id,
+            recipientId: recipient?.id || '',
+            username: recipient?.username || 'Desconhecido',
+            globalName: recipient?.globalName || null,
+            avatar: recipient?.avatar ? `https://cdn.discordapp.com/avatars/${recipient.id}/${recipient.avatar}.png` : null,
+            lastMessageId: c.lastMessageId || '',
+          }
+        })
+      dms.push(...cached)
+    }
+  }
 
   res.json({ success: true, data: dms })
 }))

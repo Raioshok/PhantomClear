@@ -14,22 +14,49 @@ const removerAmigosSchema = z.object({
 
 router.get('/remover-amigos/friends', asyncHandler(async (_req, res) => {
   const { discord } = await import('../../services/discord.service')
-  const client = discord.getActiveClient()
-  if (!client || !client.isReady()) {
+  const { storage } = await import('../../services/storage.service')
+  const token = discord.getActiveToken() || storage.getTokens()[0]?.token
+
+  if (!token) {
     throw Object.assign(new Error('Nenhuma conta conectada'), { statusCode: 400 })
   }
 
-  const friends = []
-  for (const [userId, type] of client.relationships.cache.entries()) {
-    if (type === 1) { // Friend
-      const user = client.users.cache.get(userId)
-      friends.push({
-        id: userId,
-        username: user?.username || 'Usuário',
-        discriminator: user?.discriminator || '0',
-        globalName: user?.globalName || null,
-        avatar: user?.avatar || null,
-      })
+  const friends: Array<{ id: string; username: string; discriminator: string; globalName: string | null; avatar: string | null }> = []
+
+  // Try direct Discord REST API first (accurate user metadata)
+  try {
+    const rawRelationships = await discord.request<any[]>('/users/@me/relationships', token)
+    if (Array.isArray(rawRelationships)) {
+      for (const rel of rawRelationships) {
+        if (rel.type === 1 && rel.user) {
+          friends.push({
+            id: rel.user.id || rel.id,
+            username: rel.user.username || 'Usuário',
+            discriminator: rel.user.discriminator || '0',
+            globalName: rel.user.global_name || null,
+            avatar: rel.user.avatar ? `https://cdn.discordapp.com/avatars/${rel.user.id}/${rel.user.avatar}.png` : null,
+          })
+        }
+      }
+    }
+  } catch {}
+
+  // Fallback to client cache if REST returned empty
+  if (friends.length === 0) {
+    const client = discord.getActiveClient()
+    if (client && client.relationships?.cache) {
+      for (const [userId, type] of client.relationships.cache.entries()) {
+        if (type === 1) {
+          const user = client.users.cache.get(userId)
+          friends.push({
+            id: userId,
+            username: user?.username || 'Usuário',
+            discriminator: user?.discriminator || '0',
+            globalName: user?.globalName || null,
+            avatar: user?.avatar ? `https://cdn.discordapp.com/avatars/${userId}/${user.avatar}.png` : null,
+          })
+        }
+      }
     }
   }
 

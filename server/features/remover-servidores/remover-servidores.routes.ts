@@ -15,19 +15,45 @@ const removerServidoresSchema = z.object({
 
 router.get('/remover-servidores/guilds', asyncHandler(async (_req, res) => {
   const { discord } = await import('../../services/discord.service')
-  const client = discord.getActiveClient()
-  if (!client || !client.isReady()) {
+  const { storage } = await import('../../services/storage.service')
+  const token = discord.getActiveToken() || storage.getTokens()[0]?.token
+
+  if (!token) {
     throw Object.assign(new Error('Nenhuma conta conectada'), { statusCode: 400 })
   }
 
-  const currentUserId = client.user?.id
-  const guilds = client.guilds.cache.map((g: any) => ({
-    id: g.id,
-    name: g.name,
-    icon: g.icon,
-    memberCount: g.memberCount || 0,
-    isOwner: Boolean(g.ownerId === currentUserId || g.owner),
-  }))
+  const client = discord.getActiveClient()
+  const currentUserId = client?.user?.id || (storage.getTokens().find((t) => t.token === token)?.id)
+
+  const guilds: Array<{ id: string; name: string; icon: string | null; memberCount: number; isOwner: boolean }> = []
+
+  // Try direct Discord REST API first
+  try {
+    const rawGuilds = await discord.request<any[]>('/users/@me/guilds?with_counts=true', token)
+    if (Array.isArray(rawGuilds)) {
+      for (const g of rawGuilds) {
+        guilds.push({
+          id: g.id,
+          name: g.name,
+          icon: g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png` : null,
+          memberCount: g.approximate_member_count || g.memberCount || 0,
+          isOwner: Boolean(g.owner === true || g.ownerId === currentUserId),
+        })
+      }
+    }
+  } catch {}
+
+  // Fallback to client cache
+  if (guilds.length === 0 && client && client.guilds?.cache) {
+    const cached = client.guilds.cache.map((g: any) => ({
+      id: g.id,
+      name: g.name,
+      icon: g.icon ? `https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png` : null,
+      memberCount: g.memberCount || 0,
+      isOwner: Boolean(g.ownerId === currentUserId || g.owner),
+    }))
+    guilds.push(...cached)
+  }
 
   res.json({ success: true, data: guilds })
 }))

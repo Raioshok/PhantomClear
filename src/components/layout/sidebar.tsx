@@ -53,6 +53,7 @@ import {
   Crosshair,
   BellRing,
   PieChart,
+  Award,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -94,38 +95,31 @@ const secoesMenu: SecaoMenu[] = [
     ],
   },
   {
-    titulo: "Mensagens",
+    titulo: "Mensagens & Limpeza",
     icone: <MessageSquare size={16} />,
     itens: [
-      { titulo: "Limpar DM", icone: <Trash2 size={16} />, href: "/limpar-dm" },
-      { titulo: "Limpar DM dos Amigos", icone: <Trash2 size={16} />, href: "/limpar-dm-amigos" },
       { titulo: "Limpar DMs Abertas", icone: <Trash2 size={16} />, href: "/limpar-dms" },
+      { titulo: "Limpar DM dos Amigos", icone: <Trash2 size={16} />, href: "/limpar-dm-amigos" },
       { titulo: "Limpar Package", icone: <Package size={16} />, href: "/limpar-package" },
       { titulo: "Abrir DMs", icone: <MessageSquare size={16} />, href: "/abrir-dms" },
       { titulo: "Fechar DMs", icone: <PhoneOff size={16} />, href: "/fechar-dms" },
+      { titulo: "Backups", icone: <Archive size={16} />, href: "/backups" },
     ],
   },
   {
-    titulo: "Conta",
+    titulo: "Conta & Servidores",
     icone: <UserCog size={16} />,
     itens: [
       { titulo: "Remover Amigos", icone: <UserMinus size={16} />, href: "/remover-amigos" },
       { titulo: "Sair de Servidores", icone: <LogOutIcon size={16} />, href: "/sair-servidores" },
       { titulo: "Solicitações & HypeSquad", icone: <UserCheck size={16} />, href: "/solicitacoes-amizade" },
-      { titulo: "Username Sniper", icone: <Crosshair size={16} />, href: "/username-sniper" },
-    ],
-  },
-  {
-    titulo: "Servidores",
-    icone: <Server size={16} />,
-    itens: [
       { titulo: "Clonar Servidor", icone: <Copy size={16} />, href: "/clonar-servidor" },
       { titulo: "Scraper Ícones", icone: <Image size={16} />, href: "/scraper-icones" },
       { titulo: "Webhooks", icone: <Webhook size={16} />, href: "/webhooks" },
     ],
   },
   {
-    titulo: "Call",
+    titulo: "Voz & Tactical VoIP",
     icone: <PhoneCall size={16} />,
     itens: [
       { titulo: "Desconectar Call", icone: <PhoneOff size={16} />, href: "/desconectar-call" },
@@ -141,31 +135,26 @@ const secoesMenu: SecaoMenu[] = [
     ],
   },
   {
-    titulo: "Dados",
-    icone: <Database size={16} />,
+    titulo: "Automação & Snipers",
+    icone: <Sparkles size={16} />,
+    defaultOpen: true,
     itens: [
-      { titulo: "Análise de Package", icone: <PieChart size={16} />, href: "/analise-package" },
-      { titulo: "Backups", icone: <Archive size={16} />, href: "/backups" },
-    ],
-  },
-  {
-    titulo: "Monitoramento",
-    icone: <Eye size={16} />,
-    itens: [
-      { titulo: "Dashboard", icone: <Radio size={16} />, href: "/monitoramento" },
-      { titulo: "Alertas", icone: <BellRing size={16} />, href: "/alertas" },
-      { titulo: "Configuração", icone: <Settings size={16} />, href: "/monitoramento/config" },
-    ],
-  },
-  {
-    titulo: "Sistema",
-    icone: <Wrench size={16} />,
-    alwaysOpen: true,
-    itens: [
-      { titulo: "Tasks", icone: <ListTodo size={16} />, href: "/tasks" },
+      { titulo: "Quest & Orbs Farmer", icone: <Award size={16} />, href: "/quest-farmer" },
+      { titulo: "Username Sniper", icone: <Crosshair size={16} />, href: "/username-sniper" },
       { titulo: "Nitro Sniper", icone: <Gift size={16} />, href: "/nitro-sniper" },
       { titulo: "Status Rotator", icone: <RotateCw size={16} />, href: "/status-rotator" },
       { titulo: "Auto-Responder", icone: <Bot size={16} />, href: "/auto-responder" },
+    ],
+  },
+  {
+    titulo: "Sistema & Forense",
+    icone: <Wrench size={16} />,
+    alwaysOpen: true,
+    itens: [
+      { titulo: "Monitoramento", icone: <Radio size={16} />, href: "/monitoramento" },
+      { titulo: "Alertas", icone: <BellRing size={16} />, href: "/alertas" },
+      { titulo: "Análise de Package", icone: <PieChart size={16} />, href: "/analise-package" },
+      { titulo: "Tasks", icone: <ListTodo size={16} />, href: "/tasks" },
       { titulo: "Prefix Commands", icone: <Terminal size={16} />, href: "/prefix-commands" },
       { titulo: "Rich Presence", icone: <Gamepad2 size={16} />, href: "/rpc" },
       { titulo: "Configurações", icone: <Settings size={16} />, href: "/configuracoes" },

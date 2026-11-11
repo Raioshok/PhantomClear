@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input"
 import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { useTokens } from "@/hooks/use-tokens"
+import { useActiveTask } from "@/hooks/use-tasks"
 import { useWSEvent } from "@/hooks/use-websocket"
 import { api } from "@/lib/api-client"
 import type { WSToolProgress, WSToolCompleted, WSToolError } from "@/types/websocket"
@@ -53,6 +54,17 @@ export default function PaginaUsernameSniper() {
   const [availableList, setAvailableList] = useState<string[]>([])
   const [history, setHistory] = useState<CheckItem[]>([])
   const [copiedName, setCopiedName] = useState<string | null>(null)
+
+  const { isRunning: isTaskRunning, activeTask } = useActiveTask('username-sniper')
+
+  useEffect(() => {
+    if (isTaskRunning && activeTask) {
+      setRunning(true)
+      setActiveTaskId(activeTask.id)
+      setProgress(activeTask.progress)
+      setTotal(activeTask.total)
+    }
+  }, [isTaskRunning, activeTask])
 
   useWSEvent<WSToolProgress>("tool:progress", (ev) => {
     if (ev.taskId === activeTaskId) {
