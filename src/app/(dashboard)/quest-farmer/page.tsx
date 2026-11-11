@@ -54,7 +54,7 @@ interface BountyItem {
 }
 
 export default function PaginaQuestFarmer() {
-  const { activeToken, tokens } = useTokens()
+  const { activeToken, tokens, selectToken } = useTokens()
   const [quests, setQuests] = useState<QuestItem[]>([])
   const [bounties, setBounties] = useState<BountyItem[]>([])
   const [orbBalance, setOrbBalance] = useState<number>(0)
@@ -68,6 +68,12 @@ export default function PaginaQuestFarmer() {
   const [percent, setPercent] = useState(0)
 
   const { isRunning: isQuestRunning, activeTask: questTask } = useActiveTask('quest-farmer')
+
+  useEffect(() => {
+    if (!activeToken && tokens.length > 0) {
+      selectToken(tokens[0].id)
+    }
+  }, [activeToken, tokens, selectToken])
 
   useEffect(() => {
     if (isQuestRunning && questTask) {
@@ -210,6 +216,21 @@ export default function PaginaQuestFarmer() {
         </div>
 
         <div className="flex items-center gap-2">
+          {activeToken ? (
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-[11px] font-semibold text-emerald-300">
+              <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>@{activeToken.username}</span>
+            </div>
+          ) : tokens.length > 0 ? (
+            <button
+              type="button"
+              onClick={() => selectToken(tokens[0].id)}
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-amber-500/30 bg-amber-500/10 text-[11px] font-semibold text-amber-300 hover:bg-amber-500/20 cursor-pointer"
+            >
+              <span>Conectar @{tokens[0].username}</span>
+            </button>
+          ) : null}
+
           <Button variant="outline" size="sm" onClick={loadData} disabled={loading} className="gap-1.5 text-xs">
             {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCw className="h-3 w-3" />}
             Atualizar

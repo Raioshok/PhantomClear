@@ -491,8 +491,11 @@ class DiscordService {
     this.defaultDelay = ms
   }
 
-  getActiveClient(): any {
-    return this.getClient()
+  getActiveClient(): any | null {
+    if (!this.activeClient || !this.activeClient.isReady()) {
+      return null
+    }
+    return this.activeClient
   }
 
   listFriends(): string[] {

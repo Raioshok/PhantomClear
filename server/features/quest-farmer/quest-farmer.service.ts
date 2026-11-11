@@ -184,10 +184,19 @@ class QuestFarmerService {
     let token = discord.getActiveToken()
     if (!token) {
       const stored = storage.getTokens()
-      if (stored.length > 0) token = stored[0].token
+      const valid = stored.find((t) => t.status === 'valid') || stored[0]
+      if (valid) {
+        token = valid.token
+        if (!discord.getActiveToken()) {
+          discord.connect(token).catch(() => {})
+        }
+      }
     }
     if (!token) {
-      throw Object.assign(new Error('Nenhuma conta Discord conectada.'), { statusCode: 400 })
+      throw Object.assign(
+        new Error('Nenhuma conta conectada. Por favor, adicione e selecione uma conta na aba Tokens.'),
+        { statusCode: 400 }
+      )
     }
     return token
   }
