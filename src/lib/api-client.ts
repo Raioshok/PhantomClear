@@ -229,10 +229,10 @@ class ApiClient {
   startUsernameSniper(cfg: any) { return this.post<{ taskId: string; totalCandidates: number }>('/tools/username-sniper/start', cfg) }
 
   // Quest Orbs Farmer
-  getQuests() { return this.get<any[]>('/tools/quest-farmer/quests') }
+  getQuestFarmerData() { return this.get<{ quests: any[]; bounties: any[]; orbBalance: number }>('/tools/quest-farmer/data') }
   enrollQuest(questId: string) { return this.post<{ success: boolean }>('/tools/quest-farmer/enroll', { questId }) }
   claimQuest(questId: string) { return this.post<{ success: boolean }>('/tools/quest-farmer/claim', { questId }) }
-  startQuestFarmer(questIds?: string[]) { return this.post<{ taskId: string }>('/tools/quest-farmer/start', { questIds }) }
+  startQuestFarmer() { return this.post<{ taskId: string; questsCount: number; bountiesCount: number }>('/tools/quest-farmer/start', {}) }
 }
 
 export const api = new ApiClient()

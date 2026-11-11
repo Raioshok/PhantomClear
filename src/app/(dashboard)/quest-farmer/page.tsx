@@ -15,6 +15,8 @@ import {
   Shield,
   Layers,
   AlertTriangle,
+  Zap,
+  Coins,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -36,13 +38,27 @@ interface QuestItem {
   completed: boolean
   claimed: boolean
   progressPercent: number
-  targetMinutes: number
-  isSimulated?: boolean
+  targetSeconds: number
+  doneSeconds: number
+  orbsReward: number
+  taskType: string
+}
+
+interface BountyItem {
+  creativeId: string
+  advertiserName: string
+  productName: string
+  endsAt: string
+  orbs: number
+  claimed: boolean
 }
 
 export default function PaginaQuestFarmer() {
   const { activeToken, tokens } = useTokens()
   const [quests, setQuests] = useState<QuestItem[]>([])
+  const [bounties, setBounties] = useState<BountyItem[]>([])
+  const [orbBalance, setOrbBalance] = useState<number>(0)
+
   const [loading, setLoading] = useState(false)
   const [starting, setStarting] = useState(false)
   const [farming, setFarming] = useState(false)
@@ -57,7 +73,7 @@ export default function PaginaQuestFarmer() {
     if (isQuestRunning && questTask) {
       setFarming(true)
       setActiveTaskId(questTask.id)
-      setProgressMsg(questTask.phase || "Farm de Quests ativo no Discord...")
+      setProgressMsg(questTask.phase || "Auto-Farm rápido de Quests e Orbs em andamento...")
       if (questTask.total > 0) {
         setPercent(Math.round((questTask.progress / questTask.total) * 100))
       }
@@ -65,17 +81,21 @@ export default function PaginaQuestFarmer() {
   }, [isQuestRunning, questTask])
 
   useEffect(() => {
-    loadQuests()
+    loadData()
   }, [activeToken])
 
-  const loadQuests = async () => {
+  const loadData = async () => {
     setLoading(true)
     setErrorMessage("")
     try {
-      const res = await api.getQuests()
-      if (res.data) setQuests(res.data)
+      const res = await api.getQuestFarmerData()
+      if (res.data) {
+        if (Array.isArray(res.data.quests)) setQuests(res.data.quests)
+        if (Array.isArray(res.data.bounties)) setBounties(res.data.bounties)
+        if (typeof res.data.orbBalance === 'number') setOrbBalance(res.data.orbBalance)
+      }
     } catch (err: any) {
-      setErrorMessage(err.message || "Erro ao carregar quests do Discord.")
+      setErrorMessage(err.message || "Erro ao conectar à API de Quests do Discord.")
     } finally {
       setLoading(false)
     }
@@ -99,7 +119,11 @@ export default function PaginaQuestFarmer() {
   })
 
   useWSEvent("quest-farmer:claimed", () => {
-    loadQuests()
+    loadData()
+  })
+
+  useWSEvent("quest-farmer:bounty-claimed", () => {
+    loadData()
   })
 
   useWSEvent<WSToolCompleted>("tool:completed", (ev) => {
@@ -107,8 +131,8 @@ export default function PaginaQuestFarmer() {
       setFarming(false)
       setStarting(false)
       setActiveTaskId(null)
-      setProgressMsg("Farm de Quests concluído! Recompensas e Orbs resgatados com sucesso.")
-      loadQuests()
+      setProgressMsg("Farm concluído! Todas as Quests e Bounties foram concluídas e resgatadas.")
+      loadData()
     }
   })
 
@@ -125,9 +149,9 @@ export default function PaginaQuestFarmer() {
   const handleStartFarm = async () => {
     setErrorMessage("")
     setStarting(true)
-    setProgressMsg("Iniciando simulação de jogo e envio de heartbeats no Discord...")
+    setProgressMsg("Iniciando bypass rápido de 2 minutos (Quests + Bounties)...")
     setFarming(true)
-    setPercent(3)
+    setPercent(5)
 
     try {
       const res = await api.startQuestFarmer()
@@ -140,7 +164,7 @@ export default function PaginaQuestFarmer() {
       }
     } catch (err: any) {
       setFarming(false)
-      setErrorMessage(err.message || "Falha ao iniciar o farm de quests.")
+      setErrorMessage(err.message || "Falha ao iniciar o farm.")
       setProgressMsg("")
     } finally {
       setStarting(false)
@@ -155,20 +179,20 @@ export default function PaginaQuestFarmer() {
     setFarming(false)
     setStarting(false)
     setActiveTaskId(null)
-    setProgressMsg("Farm de Quests pausado.")
+    setProgressMsg("Farm pausado.")
   }
 
   const handleEnroll = async (questId: string) => {
     try {
       await api.enrollQuest(questId)
-      loadQuests()
+      loadData()
     } catch {}
   }
 
   const handleClaim = async (questId: string) => {
     try {
       await api.claimQuest(questId)
-      loadQuests()
+      loadData()
     } catch {}
   }
 
@@ -178,15 +202,15 @@ export default function PaginaQuestFarmer() {
         <div>
           <h1 className="text-xl font-bold tracking-tight text-foreground flex items-center gap-2">
             <Award className="h-5 w-5 text-amber-400" />
-            Discord Quest & Orbs Farmer
+            Discord Quest & Orbs Farmer (Fast-Forward 2 Min)
           </h1>
           <p className="text-sm text-muted-foreground">
-            Farme missões do Discord automaticamente para coletar Quest Orbs, decorações de avatar e recompensas de jogos.
+            Bypass acelerado que conclui missões em ~2 minutos e resgata Bounties instantâneas de 50 Orbs cada.
           </p>
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm" onClick={loadQuests} disabled={loading} className="gap-1.5 text-xs">
+          <Button variant="outline" size="sm" onClick={loadData} disabled={loading} className="gap-1.5 text-xs">
             {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCw className="h-3 w-3" />}
             Atualizar
           </Button>
@@ -201,11 +225,47 @@ export default function PaginaQuestFarmer() {
               disabled={starting}
               className="bg-amber-500 hover:bg-amber-400 text-black font-semibold gap-2 text-xs shadow-md cursor-pointer"
             >
-              {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
-              {starting ? "Iniciando..." : "Auto-Farm Todas as Quests"}
+              {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+              {starting ? "Iniciando..." : "Auto-Farm Rápido (2 Minutos)"}
             </Button>
           )}
         </div>
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+        <Card className="border-amber-500/30 bg-amber-500/5">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-xs text-muted-foreground">Saldo de Quest Orbs</p>
+              <p className="text-2xl font-black text-amber-400 font-mono mt-0.5 flex items-center gap-1.5">
+                <Coins className="h-5 w-5 text-amber-400" />
+                {orbBalance.toLocaleString()} Orbs
+              </p>
+            </div>
+            <Award className="h-6 w-6 text-amber-400/40" />
+          </CardContent>
+        </Card>
+
+        <Card className="border-primary/30 bg-primary/5">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-xs text-muted-foreground">Quests Disponíveis</p>
+              <p className="text-2xl font-black text-primary font-mono mt-0.5">{quests.length}</p>
+            </div>
+            <Gamepad2 className="h-6 w-6 text-primary/40" />
+          </CardContent>
+        </Card>
+
+        <Card className="border-emerald-500/30 bg-emerald-500/5">
+          <CardContent className="p-4 flex items-center justify-between">
+            <div>
+              <p className="text-xs text-muted-foreground">Bounties Imediatas (50 Orbs)</p>
+              <p className="text-2xl font-black text-emerald-400 font-mono mt-0.5">{bounties.length}</p>
+            </div>
+            <Gift className="h-6 w-6 text-emerald-400/40" />
+          </CardContent>
+        </Card>
       </div>
 
       {errorMessage && (
@@ -220,7 +280,7 @@ export default function PaginaQuestFarmer() {
           <div className="flex items-center justify-between text-xs">
             <span className="font-semibold text-amber-300 flex items-center gap-2">
               <Loader2 className="h-4 w-4 animate-spin text-amber-400" />
-              {progressMsg || "Simulando tempo de jogo no Discord Gateway e enviando heartbeats..."}
+              {progressMsg || "Enviando heartbeats acelerados e resgatando Orbs..."}
             </span>
             <span className="font-mono font-bold text-amber-300">{percent}%</span>
           </div>
@@ -233,14 +293,20 @@ export default function PaginaQuestFarmer() {
         </Card>
       )}
 
-      {/* Quests List */}
+      {/* Quests Section */}
       <div className="space-y-4">
+        <div className="flex items-center justify-between">
+          <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <Gamepad2 className="h-4 w-4 text-primary" /> Missões Oficiais do Discord ({quests.length})
+          </h2>
+        </div>
+
         {quests.length === 0 ? (
           <Card className="p-8 text-center text-xs text-muted-foreground">
             <Gamepad2 className="h-10 w-10 text-muted-foreground/30 mx-auto mb-2" />
-            Nenhuma missão do Discord carregada no momento.
+            Nenhuma missão do Discord encontrada no momento.
             <div className="mt-2">
-              <Button onClick={loadQuests} size="sm" variant="outline" className="text-xs">
+              <Button onClick={loadData} size="sm" variant="outline" className="text-xs">
                 Recarregar Quests
               </Button>
             </div>
@@ -260,15 +326,10 @@ export default function PaginaQuestFarmer() {
                         </div>
                       )}
                       <div>
-                        <CardTitle className="text-sm font-bold text-foreground flex items-center gap-1.5">
-                          {q.name}
-                          {q.isSimulated && (
-                            <span className="rounded-md bg-secondary/80 px-1.5 py-0.2 text-[9px] text-muted-foreground font-normal">
-                              Preset
-                            </span>
-                          )}
-                        </CardTitle>
-                        <CardDescription className="text-xs">{q.applicationName} · {q.targetMinutes} min de jogo</CardDescription>
+                        <CardTitle className="text-sm font-bold text-foreground">{q.name}</CardTitle>
+                        <CardDescription className="text-xs">
+                          {q.applicationName} · {Math.round(q.targetSeconds / 60)} min ({q.orbsReward > 0 ? `+${q.orbsReward} Orbs` : 'Recompensa'})
+                        </CardDescription>
                       </div>
                     </div>
 
@@ -304,11 +365,11 @@ export default function PaginaQuestFarmer() {
 
                   <div className="flex items-center justify-between pt-1">
                     <span className="text-[10px] text-muted-foreground">
-                      {q.expiresAt ? `Expira em: ${new Date(q.expiresAt).toLocaleDateString()}` : 'Ativo 24/7'}
+                      {q.expiresAt ? `Expira: ${new Date(q.expiresAt).toLocaleDateString()}` : 'Ativo'}
                     </span>
 
                     <div className="flex items-center gap-2">
-                      {!q.enrolled && !q.completed && !q.claimed && !q.isSimulated && (
+                      {!q.enrolled && !q.completed && !q.claimed && (
                         <Button size="sm" variant="outline" onClick={() => handleEnroll(q.id)} className="h-7 text-xs">
                           Inscrever-se
                         </Button>
@@ -331,6 +392,38 @@ export default function PaginaQuestFarmer() {
           </div>
         )}
       </div>
+
+      {/* Bounties Section */}
+      {bounties.length > 0 && (
+        <div className="space-y-4 pt-2">
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+              <Gift className="h-4 w-4 text-emerald-400" /> Bounties Patrocinadas (+50 Orbs Imediatos)
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-3">
+            {bounties.map((b) => (
+              <Card key={b.creativeId} className="border-emerald-500/30 bg-emerald-500/5 p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-xs font-bold text-foreground">{b.advertiserName}</p>
+                  <p className="text-[11px] text-muted-foreground">{b.productName}</p>
+                  <span className="inline-block mt-1 font-mono text-xs font-bold text-emerald-400">
+                    +50 Quest Orbs
+                  </span>
+                </div>
+                <Button
+                  size="sm"
+                  onClick={handleStartFarm}
+                  className="h-8 bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs"
+                >
+                  Resgatar
+                </Button>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
