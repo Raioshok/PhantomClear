@@ -66,7 +66,6 @@ import { useTokens } from "@/hooks/use-tokens"
 import { AddAccountModal } from "./add-account-modal"
 import { ThemedIcon } from "@/components/themed-icon"
 import { XP_SECTION_ICONS, xpIconForRoute } from "@/lib/xp-icons"
-import { PonyCompanion } from './pony-atmosphere'
 
 interface ItemMenu {
   titulo: string
@@ -362,7 +361,6 @@ export function Sidebar() {
           })}
         </nav>
 
-        <PonyCompanion />
         <div className="app-account-panel border-t border-border/60 bg-sidebar/40 p-3">
           {contaAtiva ? (
             <div>
