@@ -229,7 +229,7 @@ class ApiClient {
   startUsernameSniper(cfg: any) { return this.post<{ taskId: string; totalCandidates: number }>('/tools/username-sniper/start', cfg) }
 
   // Quest Orbs Farmer
-  getQuestFarmerData() { return this.get<{ quests: any[]; bounties: any[]; orbBalance: number }>('/tools/quest-farmer/data') }
+  getQuestFarmerData() { return this.get<{ quests: any[]; bounties: any[]; orbBalance: number; account?: { id: string; username: string; globalName?: string; avatar?: string } }>('/tools/quest-farmer/data') }
   enrollQuest(questId: string) { return this.post<{ success: boolean }>('/tools/quest-farmer/enroll', { questId }) }
   claimQuest(questId: string) { return this.post<{ success: boolean }>('/tools/quest-farmer/claim', { questId }) }
   startQuestFarmer() { return this.post<{ taskId: string; questsCount: number; bountiesCount: number }>('/tools/quest-farmer/start', {}) }

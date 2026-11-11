@@ -17,6 +17,7 @@ import {
   AlertTriangle,
   Zap,
   Coins,
+  User,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -42,6 +43,7 @@ interface QuestItem {
   doneSeconds: number
   orbsReward: number
   taskType: string
+  isSimulated?: boolean
 }
 
 interface BountyItem {
@@ -54,10 +56,11 @@ interface BountyItem {
 }
 
 export default function PaginaQuestFarmer() {
-  const { activeToken, tokens, selectToken } = useTokens()
+  const { activeToken, tokens, switchAccount } = useTokens()
   const [quests, setQuests] = useState<QuestItem[]>([])
   const [bounties, setBounties] = useState<BountyItem[]>([])
   const [orbBalance, setOrbBalance] = useState<number>(0)
+  const [serverAccount, setServerAccount] = useState<{ id: string; username: string; globalName?: string } | null>(null)
 
   const [loading, setLoading] = useState(false)
   const [starting, setStarting] = useState(false)
@@ -71,9 +74,9 @@ export default function PaginaQuestFarmer() {
 
   useEffect(() => {
     if (!activeToken && tokens.length > 0) {
-      selectToken(tokens[0].id)
+      switchAccount(tokens[0].id).catch(() => {})
     }
-  }, [activeToken, tokens, selectToken])
+  }, [activeToken, tokens, switchAccount])
 
   useEffect(() => {
     if (isQuestRunning && questTask) {
@@ -82,6 +85,13 @@ export default function PaginaQuestFarmer() {
       setProgressMsg(questTask.phase || "Auto-Farm rápido de Quests e Orbs em andamento...")
       if (questTask.total > 0) {
         setPercent(Math.round((questTask.progress / questTask.total) * 100))
+      }
+    } else if (!isQuestRunning) {
+      setFarming(false)
+      setActiveTaskId(null)
+      if (percent >= 100) {
+        setPercent(0)
+        setProgressMsg("")
       }
     }
   }, [isQuestRunning, questTask])
@@ -99,6 +109,7 @@ export default function PaginaQuestFarmer() {
         if (Array.isArray(res.data.quests)) setQuests(res.data.quests)
         if (Array.isArray(res.data.bounties)) setBounties(res.data.bounties)
         if (typeof res.data.orbBalance === 'number') setOrbBalance(res.data.orbBalance)
+        if (res.data.account) setServerAccount(res.data.account)
       }
     } catch (err: any) {
       setErrorMessage(err.message || "Erro ao conectar à API de Quests do Discord.")
@@ -137,7 +148,12 @@ export default function PaginaQuestFarmer() {
       setFarming(false)
       setStarting(false)
       setActiveTaskId(null)
+      setPercent(100)
       setProgressMsg("Farm concluído! Todas as Quests e Bounties foram concluídas e resgatadas.")
+      setTimeout(() => {
+        setPercent(0)
+        setProgressMsg("")
+      }, 3000)
       loadData()
     }
   })
@@ -178,14 +194,16 @@ export default function PaginaQuestFarmer() {
   }
 
   const handleStopFarm = async () => {
-    if (!activeTaskId) return
-    try {
-      await api.cancelTask(activeTaskId)
-    } catch {}
+    if (activeTaskId) {
+      try {
+        await api.cancelTask(activeTaskId)
+      } catch {}
+    }
     setFarming(false)
     setStarting(false)
     setActiveTaskId(null)
-    setProgressMsg("Farm pausado.")
+    setPercent(0)
+    setProgressMsg("Farm finalizado.")
   }
 
   const handleEnroll = async (questId: string) => {
@@ -202,6 +220,12 @@ export default function PaginaQuestFarmer() {
     } catch {}
   }
 
+  const accountUsername =
+    activeToken?.user?.username ||
+    serverAccount?.username ||
+    activeToken?.label ||
+    (tokens.length > 0 ? tokens[0].user?.username || tokens[0].label : null)
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
@@ -216,20 +240,20 @@ export default function PaginaQuestFarmer() {
         </div>
 
         <div className="flex items-center gap-2">
-          {activeToken ? (
-            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-emerald-500/30 bg-emerald-500/10 text-[11px] font-semibold text-emerald-300">
+          {accountUsername ? (
+            <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-emerald-500/30 bg-emerald-500/10 text-xs font-semibold text-emerald-300">
               <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              <span>@{activeToken.username}</span>
+              <span>@{accountUsername}</span>
             </div>
-          ) : tokens.length > 0 ? (
-            <button
-              type="button"
-              onClick={() => selectToken(tokens[0].id)}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-amber-500/30 bg-amber-500/10 text-[11px] font-semibold text-amber-300 hover:bg-amber-500/20 cursor-pointer"
+          ) : (
+            <a
+              href="/tokens"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-amber-500/30 bg-amber-500/10 text-xs font-semibold text-amber-300 hover:bg-amber-500/20"
             >
-              <span>Conectar @{tokens[0].username}</span>
-            </button>
-          ) : null}
+              <User size={13} />
+              <span>Conectar Conta</span>
+            </a>
+          )}
 
           <Button variant="outline" size="sm" onClick={loadData} disabled={loading} className="gap-1.5 text-xs">
             {loading ? <Loader2 className="h-3 w-3 animate-spin" /> : <RotateCw className="h-3 w-3" />}
@@ -237,7 +261,7 @@ export default function PaginaQuestFarmer() {
           </Button>
 
           {farming ? (
-            <Button onClick={handleStopFarm} variant="destructive" className="gap-2 font-semibold text-xs shadow-md">
+            <Button onClick={handleStopFarm} variant="destructive" className="gap-2 font-semibold text-xs shadow-md cursor-pointer">
               <StopCircle className="h-4 w-4" /> Parar Farm ({percent}%)
             </Button>
           ) : (
@@ -318,7 +342,7 @@ export default function PaginaQuestFarmer() {
       <div className="space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <Gamepad2 className="h-4 w-4 text-primary" /> Missões Oficiais do Discord ({quests.length})
+            <Gamepad2 className="h-4 w-4 text-primary" /> Missões Detectadas ({quests.length})
           </h2>
         </div>
 
@@ -347,7 +371,14 @@ export default function PaginaQuestFarmer() {
                         </div>
                       )}
                       <div>
-                        <CardTitle className="text-sm font-bold text-foreground">{q.name}</CardTitle>
+                        <div className="flex items-center gap-2">
+                          <CardTitle className="text-sm font-bold text-foreground">{q.name}</CardTitle>
+                          {q.isSimulated && (
+                            <span className="rounded-full bg-amber-500/15 border border-amber-500/30 px-1.5 py-0.2 text-[9px] font-bold text-amber-400">
+                              ⚡ Preset Oficial
+                            </span>
+                          )}
+                        </div>
                         <CardDescription className="text-xs">
                           {q.applicationName} · {Math.round(q.targetSeconds / 60)} min ({q.orbsReward > 0 ? `+${q.orbsReward} Orbs` : 'Recompensa'})
                         </CardDescription>
@@ -374,7 +405,9 @@ export default function PaginaQuestFarmer() {
                   <div className="space-y-1">
                     <div className="flex justify-between text-[11px] text-muted-foreground">
                       <span>Progresso da Quest</span>
-                      <span className="font-mono font-semibold text-foreground">{q.progressPercent}%</span>
+                      <span className="font-mono font-semibold text-foreground">
+                        {q.doneSeconds}/{q.targetSeconds}s ({q.progressPercent}%)
+                      </span>
                     </div>
                     <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary">
                       <div
@@ -436,7 +469,7 @@ export default function PaginaQuestFarmer() {
                 <Button
                   size="sm"
                   onClick={handleStartFarm}
-                  className="h-8 bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs"
+                  className="h-8 bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs cursor-pointer"
                 >
                   Resgatar
                 </Button>
