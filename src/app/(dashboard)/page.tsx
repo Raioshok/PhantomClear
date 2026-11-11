@@ -33,7 +33,7 @@ import {
   User,
 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useWebSocket } from "@/hooks/use-websocket"
+import { useWebSocket, useWSEvent } from "@/hooks/use-websocket"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import { useTasks } from "@/hooks/use-tasks"
 import { useTokens } from "@/hooks/use-tokens"
@@ -257,26 +257,50 @@ export default function PaginaInicial() {
   const [status, setStatus] = useState<ServerStatus | null>(null)
   const [apiOnline, setApiOnline] = useState(false)
   const [analytics, setAnalytics] = useState<AnalyticsData | null>(null)
+  const [liveUptime, setLiveUptime] = useState(0)
+
+  // Live second-by-second ticker for real-time uptime & activity duration
+  useEffect(() => {
+    const ticker = setInterval(() => {
+      setLiveUptime((prev) => prev + 1000)
+    }, 1000)
+    return () => clearInterval(ticker)
+  }, [])
+
+  const refreshAnalytics = () => {
+    api.getAnalytics()
+      .then((res) => {
+        if (res.data) setAnalytics(res.data as AnalyticsData)
+      })
+      .catch(() => {})
+  }
 
   useEffect(() => {
     const fetchStatus = () => {
       api.getStatus().then((res) => {
-        setStatus(res.data as ServerStatus)
+        const s = res.data as ServerStatus
+        setStatus(s)
         setApiOnline(true)
+        if (typeof s.uptime === 'number') {
+          setLiveUptime(s.uptime)
+        }
       }).catch(() => {
         setApiOnline(false)
       })
+      refreshAnalytics()
     }
     fetchStatus()
-    const interval = setInterval(fetchStatus, 5000)
+    const interval = setInterval(fetchStatus, 3000)
     return () => clearInterval(interval)
   }, [])
 
-  useEffect(() => {
-    api.getAnalytics()
-      .then((res) => setAnalytics(res.data as AnalyticsData))
-      .catch(() => {})
-  }, [])
+  useWSEvent<AnalyticsData>("stats:updated", (data) => {
+    if (data) setAnalytics(data)
+  })
+
+  useWSEvent("tool:completed", () => {
+    refreshAnalytics()
+  })
 
   const isOnline = apiOnline || connected
 
@@ -412,7 +436,7 @@ export default function PaginaInicial() {
           },
           {
             label: "Tempo Total",
-            valor: formatDuration(statsData?.totalAllTime ?? 0),
+            valor: formatUptime(Math.max(liveUptime, (statsData?.totalAllTime || 0) * 1000)),
             icone: <Clock size={16} />,
             accent: "text-amber-400",
             bg: "bg-amber-500/10",
@@ -420,10 +444,10 @@ export default function PaginaInicial() {
           },
           {
             label: "Tasks Rodando",
-            valor: runningTasks.length,
+            valor: runningTasks.length > 0 ? runningTasks.length : (status?.runningTasks ?? 0),
             icone: <Activity size={16} />,
-            accent: runningTasks.length > 0 ? "text-emerald-400" : "text-muted-foreground",
-            bg: runningTasks.length > 0 ? "bg-emerald-500/10" : "bg-secondary/50",
+            accent: (runningTasks.length > 0 || (status?.runningTasks ?? 0) > 0) ? "text-emerald-400" : "text-muted-foreground",
+            bg: (runningTasks.length > 0 || (status?.runningTasks ?? 0) > 0) ? "bg-emerald-500/10" : "bg-secondary/50",
           },
         ].map((m) => (
           <div

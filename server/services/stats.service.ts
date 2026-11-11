@@ -3,6 +3,7 @@ import path from 'path'
 import { config } from '../config'
 import { logger } from '../core/logger'
 import { discord } from './discord.service'
+import { broadcastWSEvent } from '../core/websocket'
 
 export interface AccountRef {
   accountId?: string
@@ -35,6 +36,10 @@ export type ToolActionType =
   | 'scraper-icons'
   | 'call-utils'
   | 'prefix-commands'
+  | 'username-sniper'
+  | 'webhooks'
+  | 'auto-responder'
+  | 'solicitacoes-amizade'
 
 export interface ToolActionRecord extends AccountRef {
   id: string
@@ -116,6 +121,9 @@ class StatsService {
     })
     this.save()
     logger.info('Stats', `Cleanup registrado: ${record.messagesDeleted} msgs de ${record.username}`)
+    try {
+      broadcastWSEvent('stats:updated', this.getAnalytics())
+    } catch {}
   }
 
   recordAction(type: ToolActionType, duration: number, details: Record<string, number | string>): void {
@@ -129,6 +137,9 @@ class StatsService {
     })
     this.save()
     logger.info('Stats', `Action registrada: ${type} (${duration}s)`)
+    try {
+      broadcastWSEvent('stats:updated', this.getAnalytics())
+    } catch {}
   }
 
   getAnalytics(accountId?: string): AnalyticsData {

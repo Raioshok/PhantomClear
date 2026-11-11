@@ -1,6 +1,7 @@
 import { discord } from '../../services/discord.service'
 import { storage } from '../../services/storage.service'
 import { taskManager } from '../../services/task-manager.service'
+import { stats } from '../../services/stats.service'
 import { sleep } from '../../utils/helpers'
 import { logger } from '../../core/logger'
 import { broadcastWSEvent } from '../../core/websocket'
@@ -210,6 +211,12 @@ class UsernameSniperService {
       }
 
       taskManager.completeTask(task.id)
+      const duration = Math.max(1, Math.floor((Date.now() - new Date(task.startedAt || Date.now()).getTime()) / 1000))
+      stats.recordAction('username-sniper', duration, {
+        preset: cfg.preset,
+        checked,
+        available: this.availableFound.length,
+      })
       logger.info('UsernameSniper', `Varredura de usernames concluída. ${this.availableFound.length} disponíveis encontrados.`)
     })().catch(() => {})
 
