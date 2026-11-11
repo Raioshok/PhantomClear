@@ -14,6 +14,7 @@ import {
   Flame,
   Shield,
   Layers,
+  AlertTriangle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
@@ -36,15 +37,18 @@ interface QuestItem {
   claimed: boolean
   progressPercent: number
   targetMinutes: number
+  isSimulated?: boolean
 }
 
 export default function PaginaQuestFarmer() {
   const { activeToken, tokens } = useTokens()
   const [quests, setQuests] = useState<QuestItem[]>([])
   const [loading, setLoading] = useState(false)
+  const [starting, setStarting] = useState(false)
   const [farming, setFarming] = useState(false)
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null)
   const [progressMsg, setProgressMsg] = useState("")
+  const [errorMessage, setErrorMessage] = useState("")
   const [percent, setPercent] = useState(0)
 
   const { isRunning: isQuestRunning, activeTask: questTask } = useActiveTask('quest-farmer')
@@ -53,6 +57,10 @@ export default function PaginaQuestFarmer() {
     if (isQuestRunning && questTask) {
       setFarming(true)
       setActiveTaskId(questTask.id)
+      setProgressMsg(questTask.phase || "Farm de Quests ativo no Discord...")
+      if (questTask.total > 0) {
+        setPercent(Math.round((questTask.progress / questTask.total) * 100))
+      }
     }
   }, [isQuestRunning, questTask])
 
@@ -62,10 +70,13 @@ export default function PaginaQuestFarmer() {
 
   const loadQuests = async () => {
     setLoading(true)
+    setErrorMessage("")
     try {
       const res = await api.getQuests()
       if (res.data) setQuests(res.data)
-    } catch {} finally {
+    } catch (err: any) {
+      setErrorMessage(err.message || "Erro ao carregar quests do Discord.")
+    } finally {
       setLoading(false)
     }
   }
@@ -74,11 +85,17 @@ export default function PaginaQuestFarmer() {
     if (ev.taskId === activeTaskId) {
       setProgressMsg(ev.message)
       setFarming(true)
+      setStarting(false)
+      if (ev.total > 0) {
+        setPercent(Math.round((ev.progress / ev.total) * 100))
+      }
     }
   })
 
   useWSEvent<{ percent: number }>("quest-farmer:progress", (ev) => {
     setPercent(ev.percent)
+    setFarming(true)
+    setStarting(false)
   })
 
   useWSEvent("quest-farmer:claimed", () => {
@@ -88,8 +105,9 @@ export default function PaginaQuestFarmer() {
   useWSEvent<WSToolCompleted>("tool:completed", (ev) => {
     if (ev.taskId === activeTaskId) {
       setFarming(false)
+      setStarting(false)
       setActiveTaskId(null)
-      setProgressMsg("Farm de Quests concluído! Recompensas e Orbs resgatados.")
+      setProgressMsg("Farm de Quests concluído! Recompensas e Orbs resgatados com sucesso.")
       loadQuests()
     }
   })
@@ -97,22 +115,35 @@ export default function PaginaQuestFarmer() {
   useWSEvent<WSToolError>("tool:error", (ev) => {
     if (ev.taskId === activeTaskId) {
       setFarming(false)
+      setStarting(false)
       setActiveTaskId(null)
-      setProgressMsg(`Erro no farm: ${ev.error}`)
+      setErrorMessage(`Erro no farm: ${ev.error}`)
+      setProgressMsg(`Erro: ${ev.error}`)
     }
   })
 
   const handleStartFarm = async () => {
+    setErrorMessage("")
+    setStarting(true)
+    setProgressMsg("Iniciando simulação de jogo e envio de heartbeats no Discord...")
     setFarming(true)
-    setProgressMsg("Iniciando simulação de jogo e envio de heartbeats...")
+    setPercent(3)
+
     try {
       const res = await api.startQuestFarmer()
       if (res.data?.taskId) {
         setActiveTaskId(res.data.taskId)
+        setFarming(true)
+      } else {
+        setFarming(false)
+        setErrorMessage("Não foi possível iniciar a tarefa de farm.")
       }
     } catch (err: any) {
       setFarming(false)
-      setProgressMsg(`Falha ao iniciar: ${err.message || 'Erro desconhecido'}`)
+      setErrorMessage(err.message || "Falha ao iniciar o farm de quests.")
+      setProgressMsg("")
+    } finally {
+      setStarting(false)
     }
   }
 
@@ -122,6 +153,7 @@ export default function PaginaQuestFarmer() {
       await api.cancelTask(activeTaskId)
     } catch {}
     setFarming(false)
+    setStarting(false)
     setActiveTaskId(null)
     setProgressMsg("Farm de Quests pausado.")
   }
@@ -139,9 +171,6 @@ export default function PaginaQuestFarmer() {
       loadQuests()
     } catch {}
   }
-
-  const enrolledCount = quests.filter((q) => q.enrolled).length
-  const completedCount = quests.filter((q) => q.completed).length
 
   return (
     <div className="space-y-6">
@@ -169,13 +198,22 @@ export default function PaginaQuestFarmer() {
           ) : (
             <Button
               onClick={handleStartFarm}
-              className="bg-amber-500 hover:bg-amber-400 text-black font-semibold gap-2 text-xs shadow-md"
+              disabled={starting}
+              className="bg-amber-500 hover:bg-amber-400 text-black font-semibold gap-2 text-xs shadow-md cursor-pointer"
             >
-              <Sparkles className="h-4 w-4" /> Auto-Farm Todas as Quests
+              {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+              {starting ? "Iniciando..." : "Auto-Farm Todas as Quests"}
             </Button>
           )}
         </div>
       </div>
+
+      {errorMessage && (
+        <div className="flex items-center gap-2.5 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs font-semibold text-rose-300">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-rose-400" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
 
       {farming && (
         <Card className="border-amber-500/30 bg-amber-500/10 p-4 space-y-2">
@@ -200,10 +238,12 @@ export default function PaginaQuestFarmer() {
         {quests.length === 0 ? (
           <Card className="p-8 text-center text-xs text-muted-foreground">
             <Gamepad2 className="h-10 w-10 text-muted-foreground/30 mx-auto mb-2" />
-            Nenhuma missão do Discord ativa no momento para esta conta.
-            <p className="text-[11px] text-muted-foreground/70 mt-1">
-              O Discord libera novas quests periodicamente na aba Descobrir Missões.
-            </p>
+            Nenhuma missão do Discord carregada no momento.
+            <div className="mt-2">
+              <Button onClick={loadQuests} size="sm" variant="outline" className="text-xs">
+                Recarregar Quests
+              </Button>
+            </div>
           </Card>
         ) : (
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
@@ -220,7 +260,14 @@ export default function PaginaQuestFarmer() {
                         </div>
                       )}
                       <div>
-                        <CardTitle className="text-sm font-bold text-foreground">{q.name}</CardTitle>
+                        <CardTitle className="text-sm font-bold text-foreground flex items-center gap-1.5">
+                          {q.name}
+                          {q.isSimulated && (
+                            <span className="rounded-md bg-secondary/80 px-1.5 py-0.2 text-[9px] text-muted-foreground font-normal">
+                              Preset
+                            </span>
+                          )}
+                        </CardTitle>
                         <CardDescription className="text-xs">{q.applicationName} · {q.targetMinutes} min de jogo</CardDescription>
                       </div>
                     </div>
@@ -257,11 +304,11 @@ export default function PaginaQuestFarmer() {
 
                   <div className="flex items-center justify-between pt-1">
                     <span className="text-[10px] text-muted-foreground">
-                      Expira em: {q.expiresAt ? new Date(q.expiresAt).toLocaleDateString() : 'Em breve'}
+                      {q.expiresAt ? `Expira em: ${new Date(q.expiresAt).toLocaleDateString()}` : 'Ativo 24/7'}
                     </span>
 
                     <div className="flex items-center gap-2">
-                      {!q.enrolled && !q.completed && !q.claimed && (
+                      {!q.enrolled && !q.completed && !q.claimed && !q.isSimulated && (
                         <Button size="sm" variant="outline" onClick={() => handleEnroll(q.id)} className="h-7 text-xs">
                           Inscrever-se
                         </Button>
