@@ -218,6 +218,11 @@ class ApiClient {
   testWebhook(webhookUrl: string) { return this.post<any>('/tools/webhooks/test', { webhookUrl }) }
   sendWebhook(payload: any) { return this.post<any>('/tools/webhooks/send', payload) }
   spamWebhook(payload: any) { return this.post<any>('/tools/webhooks/spam', payload) }
+
+  // Selective Batch Actions
+  getServersForLeaving() { return this.get<Array<{ id: string; name: string; icon: string | null; memberCount: number; isOwner: boolean }>>('/tools/remover-servidores/guilds') }
+  getFriendsForRemoval() { return this.get<Array<{ id: string; username: string; discriminator: string; globalName: string | null; avatar: string | null }>>('/tools/remover-amigos/friends') }
+  getOpenDmsForCleaning() { return this.get<Array<{ id: string; recipientId: string; username: string; globalName: string | null; avatar: string | null; lastMessageId: string }>>('/tools/limpar-dms-abertas/channels') }
 }
 
 export const api = new ApiClient()

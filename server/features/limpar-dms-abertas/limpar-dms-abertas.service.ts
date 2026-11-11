@@ -14,12 +14,17 @@ export async function limparDmsAbertas(cfg: LimparDmsAbertasConfig) {
   const client = discord.getActiveClient()
   const me = discord.getMe()
 
-  const dms = client.channels.cache
-    .filter((c: any) => c.type === 'DM')
+  let dms = client.channels.cache
+    .filter((c: any) => c.type === 'DM' || c.type === 1)
     .map((c: any) => c)
 
+  if (cfg.channelIds && cfg.channelIds.length > 0) {
+    const set = new Set(cfg.channelIds)
+    dms = dms.filter((c: any) => set.has(c.id))
+  }
+
   if (dms.length === 0) {
-    throw Object.assign(new Error('Você não tem DMs abertas.'), { statusCode: 400 })
+    throw Object.assign(new Error('Nenhuma DM selecionada ou aberta encontrada.'), { statusCode: 400 })
   }
 
   const task = taskManager.createTask('limpar-dms-abertas', {

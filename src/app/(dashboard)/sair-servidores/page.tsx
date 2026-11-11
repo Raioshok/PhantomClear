@@ -1,5 +1,3 @@
-
-
 import { useState, useEffect, useRef } from "react"
 import {
   LogOut,
@@ -7,17 +5,32 @@ import {
   Play,
   CheckCircle2,
   AlertTriangle,
-  X,
   RotateCcw,
+  Shield,
+  Crown,
+  Search,
+  CheckSquare,
+  Square,
+  Users,
+  StopCircle,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useTokens } from "@/hooks/use-tokens"
 import { api } from "@/lib/api-client"
 import { useWSEvent } from "@/hooks/use-websocket"
-import { ws } from "@/lib/ws-client"
-import { Link } from "react-router-dom"
 import type { WSToolProgress, WSToolCompleted, WSToolError } from "@/types/websocket"
-import type { AppSettings } from "@/types/api"
+
+interface GuildItem {
+  id: string
+  name: string
+  icon: string | null
+  memberCount: number
+  isOwner: boolean
+}
 
 type Phase = "idle" | "running" | "completed" | "error"
 
@@ -25,6 +38,12 @@ export default function PaginaSairServidores() {
   const { activeToken } = useTokens()
   const [configDelay, setConfigDelay] = useState(1000)
   const [starting, setStarting] = useState(false)
+  const [loadingGuilds, setLoadingGuilds] = useState(true)
+
+  const [guilds, setGuilds] = useState<GuildItem[]>([])
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [protectOwned, setProtectOwned] = useState(true)
+  const [search, setSearch] = useState("")
 
   const [taskId, setTaskId] = useState<string | null>(null)
   const [phase, setPhase] = useState<Phase>("idle")
@@ -36,11 +55,24 @@ export default function PaginaSairServidores() {
   const startTimeRef = useRef<number>(0)
 
   useEffect(() => {
-    api.getSettings().then((res) => {
-      const data = res.data as AppSettings
-      if (data?.delay) setConfigDelay(data.delay)
-    }).catch(() => {})
-  }, [])
+    loadGuilds()
+  }, [activeToken])
+
+  const loadGuilds = async () => {
+    if (!activeToken) return
+    setLoadingGuilds(true)
+    try {
+      const res = await api.getServersForLeaving()
+      if (res.data) {
+        setGuilds(res.data)
+        // Select all non-owned guilds by default
+        const nonOwned = res.data.filter((g) => !g.isOwner).map((g) => g.id)
+        setSelectedIds(new Set(nonOwned))
+      }
+    } catch {} finally {
+      setLoadingGuilds(false)
+    }
+  }
 
   useEffect(() => {
     if (phase !== "running") return
@@ -61,6 +93,7 @@ export default function PaginaSairServidores() {
   useWSEvent<WSToolCompleted>("tool:completed", (data) => {
     if (!taskId || data.taskId !== taskId) return
     setPhase("completed")
+    loadGuilds()
   })
 
   useWSEvent<WSToolError>("tool:error", (data) => {
@@ -69,206 +102,269 @@ export default function PaginaSairServidores() {
     setError(data.error || "Erro desconhecido")
   })
 
-  useEffect(() => {
-    api.getTasks().then(res => {
-      const tasks = ((res as any).data || []) as any[]
-      const running = tasks.find((t: any) => t.status === 'running' && t.tool === 'remover-servidores')
-      if (running) {
-        setTaskId(running.id)
-        setProgress(running.progress ?? 0)
-        setTotal(running.total ?? 0)
-        startTimeRef.current = new Date(running.startedAt).getTime()
-        setElapsedSeconds(Math.floor((Date.now() - startTimeRef.current) / 1000))
-        if (running.results?.length > 0) {
-          setStatusMessage(running.results[running.results.length - 1].message)
-        }
-        setPhase('running')
+  const toggleGuild = (id: string, isOwner: boolean) => {
+    if (isOwner && protectOwned) return
+    const next = new Set(selectedIds)
+    if (next.has(id)) next.delete(id)
+    else next.add(id)
+    setSelectedIds(next)
+  }
+
+  const selectAllEligible = () => {
+    const next = new Set<string>()
+    for (const g of guilds) {
+      if (!g.isOwner || !protectOwned) {
+        next.add(g.id)
       }
-    }).catch(() => {})
-  }, [])
+    }
+    setSelectedIds(next)
+  }
+
+  const deselectAll = () => {
+    setSelectedIds(new Set())
+  }
+
+  const filteredGuilds = guilds.filter((g) =>
+    g.name.toLowerCase().includes(search.toLowerCase())
+  )
+
+  const ownedCount = guilds.filter((g) => g.isOwner).length
 
   const handleStart = async () => {
-    if (!activeToken) return
+    if (!activeToken) {
+      setError("Nenhuma conta selecionada.")
+      setPhase("error")
+      return
+    }
+
+    if (selectedIds.size === 0) {
+      setError("Nenhum servidor selecionado.")
+      setPhase("error")
+      return
+    }
+
     setStarting(true)
     setError("")
+    setPhase("running")
+    setProgress(0)
+    setTotal(selectedIds.size)
+    startTimeRef.current = Date.now()
+    setElapsedSeconds(0)
+
     try {
-      const res = await api.runTool("remover-servidores", {
+      const res = await api.post<any>("/tools/remover-servidores", {
         tokenId: activeToken.id,
         delay: configDelay,
+        guildIds: Array.from(selectedIds),
+        ignoreOwned: protectOwned,
       })
-      const data = res.data as { taskId: string }
-      setTaskId(data.taskId)
-      setPhase("running")
-      setProgress(0)
-      setTotal(0)
-      startTimeRef.current = Date.now()
-      setElapsedSeconds(0)
-    } catch (err: unknown) {
-      setError(err instanceof Error ? err.message : "Erro ao iniciar")
+      if (res.data?.taskId) {
+        setTaskId(res.data.taskId)
+      }
+    } catch (err: any) {
       setPhase("error")
+      setError(err.message || "Falha ao iniciar saída de servidores.")
     } finally {
       setStarting(false)
     }
   }
 
-  const handleCancel = () => { if (taskId) ws.cancelTask(taskId) }
-
-  const handleReset = () => {
-    setTaskId(null)
+  const handleCancel = async () => {
+    if (!taskId) return
+    try {
+      await api.cancelTask(taskId)
+    } catch {}
     setPhase("idle")
-    setProgress(0)
-    setTotal(0)
-    setError("")
-    setStatusMessage("")
-    setElapsedSeconds(0)
   }
 
-  const fmt = (s: number) => {
-    const m = Math.floor(s / 60)
-    const sec = s % 60
-    return m > 0 ? `${m}m ${sec.toString().padStart(2, "0")}s` : `${sec}s`
-  }
+  return (
+    <div className="space-y-6">
+      <div className="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 className="text-xl font-bold tracking-tight text-foreground">Sair de Servidores (Smart)</h1>
+          <p className="text-sm text-muted-foreground">
+            Selecione quais servidores deseja sair e proteja seus servidores próprios contra perda acidental.
+          </p>
+        </div>
+        <Button variant="outline" size="sm" onClick={loadGuilds} disabled={loadingGuilds} className="gap-2 text-xs">
+          <RotateCcw className={`h-3.5 w-3.5 ${loadingGuilds ? "animate-spin" : ""}`} /> Atualizar Servidores
+        </Button>
+      </div>
 
-  const pct = total > 0 ? Math.round((progress / total) * 100) : 0
-
-  if (phase === "idle") {
-    return (
-      <div className="space-y-6">
-        {!activeToken && (
-          <div className="flex items-center gap-3 rounded-xl border border-yellow-500/20 bg-yellow-500/5 px-5 py-4">
-            <AlertTriangle size={18} className="shrink-0 text-yellow-500" />
-            <span className="text-sm text-yellow-400">Conecte uma conta primeiro para usar esta ferramenta</span>
+      {/* Safety & Owned Protection Banner */}
+      <div className="flex flex-col gap-3 rounded-2xl border border-amber-500/20 bg-amber-500/5 p-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/15 text-amber-400">
+            <Crown className="h-5 w-5" />
           </div>
-        )}
+          <div>
+            <p className="text-sm font-semibold text-foreground flex items-center gap-2">
+              Proteção de Servidores Próprios
+              <span className="rounded-full bg-amber-500/20 px-2 py-0.5 text-[10px] font-bold text-amber-400">
+                {ownedCount} detectado(s)
+              </span>
+            </p>
+            <p className="text-xs text-muted-foreground">
+              Bloqueia a saída de servidores onde você é o criador/dono da guilda, evitando perda de posse.
+            </p>
+          </div>
+        </div>
 
-        <div className="rounded-xl border border-border bg-card/40 p-6">
-          <div className="mb-6 flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-orange-500/10">
-              <LogOut size={18} className="text-orange-400" />
-            </div>
+        <div className="flex items-center gap-2">
+          <span className="text-xs font-medium text-foreground">Proteger Dono</span>
+          <Switch checked={protectOwned} onCheckedChange={setProtectOwned} />
+        </div>
+      </div>
+
+      {/* Filter and Selection Header */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <div>
-              <h2 className="text-sm font-semibold text-foreground">Sair de Servidores</h2>
-              <p className="text-xs text-muted-foreground">Sai de todos os servidores da sua conta Discord</p>
+              <CardTitle className="text-base font-semibold">
+                Servidores Encontrados ({selectedIds.size} selecionados de {guilds.length})
+              </CardTitle>
+              <CardDescription>Marque os servidores dos quais deseja se retirar.</CardDescription>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button size="sm" variant="ghost" onClick={selectAllEligible} className="text-xs gap-1">
+                <CheckSquare className="h-3.5 w-3.5" /> Selecionar Elegíveis
+              </Button>
+              <Button size="sm" variant="ghost" onClick={deselectAll} className="text-xs gap-1 text-muted-foreground">
+                <Square className="h-3.5 w-3.5" /> Desmarcar
+              </Button>
             </div>
           </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="relative">
+            <Search className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              placeholder="Pesquisar servidor por nome..."
+              className="pl-9 text-xs"
+            />
+          </div>
 
-          <div className="grid gap-6 lg:grid-cols-2">
-            <div className="space-y-2">
-              <label className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Delay (ms)</label>
-              <div className="flex h-11 items-center rounded-md border border-border bg-secondary/20 px-4 text-sm tabular-nums text-foreground">
-                {configDelay}ms
+          <div className="max-h-[380px] overflow-y-auto space-y-2 pr-1">
+            {loadingGuilds ? (
+              <div className="flex h-40 items-center justify-center text-xs text-muted-foreground">
+                <Loader2 className="h-5 w-5 animate-spin mr-2" /> Carregando lista de servidores...
               </div>
-              <Link to="/configuracoes" className="inline-block text-[11px] text-muted-foreground hover:text-primary transition-colors">
-                Alterar nas configurações →
-              </Link>
-            </div>
+            ) : filteredGuilds.length === 0 ? (
+              <div className="flex h-32 flex-col items-center justify-center text-xs text-muted-foreground">
+                Nenhum servidor encontrado.
+              </div>
+            ) : (
+              filteredGuilds.map((g) => {
+                const isSelected = selectedIds.has(g.id)
+                const isLocked = g.isOwner && protectOwned
+
+                return (
+                  <div
+                    key={g.id}
+                    onClick={() => toggleGuild(g.id, g.isOwner)}
+                    className={`flex items-center justify-between rounded-xl border p-2.5 text-xs transition-all cursor-pointer ${
+                      isLocked
+                        ? "border-amber-500/30 bg-amber-500/5 opacity-80 cursor-not-allowed"
+                        : isSelected
+                        ? "border-primary/50 bg-primary/10 shadow-xs"
+                        : "border-border/60 bg-secondary/15 hover:border-border"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        disabled={isLocked}
+                        onChange={() => {}}
+                        className="rounded border-border text-primary focus:ring-primary"
+                      />
+                      <Avatar className="h-9 w-9 rounded-xl">
+                        {g.icon ? (
+                          <AvatarImage src={`https://cdn.discordapp.com/icons/${g.id}/${g.icon}.png?size=64`} />
+                        ) : null}
+                        <AvatarFallback className="rounded-xl text-[10px] font-bold">
+                          {g.name.slice(0, 2).toUpperCase()}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="truncate">
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-foreground truncate">{g.name}</p>
+                          {g.isOwner && (
+                            <span className="flex items-center gap-1 rounded-md bg-amber-500/20 px-1.5 py-0.5 text-[9px] font-bold text-amber-400">
+                              <Crown className="h-2.5 w-2.5" /> DONO
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                          <Users className="h-2.5 w-2.5" /> {g.memberCount} membros • ID: {g.id}
+                        </p>
+                      </div>
+                    </div>
+
+                    {isLocked && (
+                      <span className="text-[10px] text-amber-400 font-semibold px-2">Protegido</span>
+                    )}
+                  </div>
+                )
+              })
+            )}
           </div>
 
-          <div className="mt-6 rounded-lg border border-orange-500/20 bg-orange-500/5 p-4">
-            <div className="flex items-center gap-3">
-              <AlertTriangle size={16} className="shrink-0 text-orange-400" />
-              <p className="text-sm text-orange-400">
-                <strong>Atenção:</strong> Esta ação é irreversível. Você sairá de todos os servidores.
-              </p>
-            </div>
+          {/* Action Row */}
+          <div className="flex items-center justify-between pt-2 border-t border-border/70">
+            <span className="text-xs text-muted-foreground">
+              {selectedIds.size} servidor(es) selecionado(s)
+            </span>
+
+            {phase === "running" ? (
+              <Button onClick={handleCancel} variant="destructive" className="gap-2 font-semibold">
+                <StopCircle className="h-4 w-4" /> Cancelar ({progress}/{total})
+              </Button>
+            ) : (
+              <Button
+                onClick={handleStart}
+                disabled={starting || selectedIds.size === 0}
+                className="bg-rose-600 hover:bg-rose-500 text-white font-semibold gap-2 shadow-md"
+              >
+                {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <LogOut className="h-4 w-4" />}
+                Sair dos Servidores Selecionados
+              </Button>
+            )}
           </div>
 
-          {error && (
-            <div className="mt-4 flex items-center gap-3 rounded-lg border border-red-500/20 bg-red-500/5 p-3">
-              <X size={16} className="shrink-0 text-red-400" />
-              <span className="text-sm text-red-400">{error}</span>
+          {phase === "running" && (
+            <div className="space-y-1 pt-2">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>{statusMessage || "Processando..."}</span>
+                <span>{progress} de {total}</span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+                <div
+                  className="h-full bg-primary transition-all duration-300"
+                  style={{ width: `${total > 0 ? (progress / total) * 100 : 0}%` }}
+                />
+              </div>
             </div>
           )}
 
-          <div className="mt-6">
-            <Button onClick={handleStart} disabled={starting || !activeToken} className="h-11 w-full bg-orange-600 text-white hover:bg-orange-700">
-              {starting ? <Loader2 size={18} className="mr-2 animate-spin" /> : <LogOut size={18} className="mr-2" />}
-              Sair de Todos os Servidores
-            </Button>
-          </div>
-        </div>
-      </div>
-    )
-  }
+          {phase === "completed" && (
+            <div className="flex items-center gap-2 rounded-xl border border-emerald-500/20 bg-emerald-500/10 p-3 text-xs text-emerald-400">
+              <CheckCircle2 className="h-4 w-4 shrink-0" />
+              <span>Saída de servidores concluída com sucesso!</span>
+            </div>
+          )}
 
-  if (phase === "running") {
-    return (
-      <div className="space-y-6">
-        <div className="rounded-xl border border-border/50 bg-card/20 backdrop-blur-sm p-6">
-          <div className="flex items-center justify-between mb-6 pb-6 border-b border-border/50">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-orange-500/10">
-                <LogOut size={18} className="text-orange-400 animate-pulse" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-foreground">Saindo dos Servidores</h3>
-                <p className="text-xs text-muted-foreground">Processando...</p>
-              </div>
+          {phase === "error" && error && (
+            <div className="flex items-center gap-2 rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-xs text-rose-400">
+              <AlertTriangle className="h-4 w-4 shrink-0" />
+              <span>{error}</span>
             </div>
-            <Button onClick={handleCancel} variant="outline" size="sm" className="h-9">
-              <X size={16} className="mr-1" /> Cancelar
-            </Button>
-          </div>
-          <div className="space-y-4">
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium text-foreground">Progresso</span>
-                <span className="text-sm text-muted-foreground">{pct}%</span>
-              </div>
-              <div className="h-2 bg-secondary rounded-full overflow-hidden">
-                <div className="h-full bg-orange-500 transition-all duration-300" style={{ width: `${pct}%` }} />
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">{progress} de {total} servidores • {fmt(elapsedSeconds)}</p>
-            </div>
-            {statusMessage && (
-              <p className="text-xs text-muted-foreground px-3 py-2 rounded-lg bg-secondary/20">{statusMessage}</p>
-            )}
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (phase === "completed") {
-    return (
-      <div className="space-y-6">
-        <div className="rounded-xl border border-green-500/20 bg-green-500/5 p-6">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-full bg-green-500/20 flex items-center justify-center">
-              <CheckCircle2 size={24} className="text-green-400" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-green-400">Concluído!</h3>
-              <p className="text-sm text-muted-foreground">Saiu de {progress} servidores em {fmt(elapsedSeconds)}</p>
-            </div>
-            <Button onClick={handleReset} variant="outline" className="h-10">
-              <RotateCcw size={16} className="mr-2" /> Voltar
-            </Button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  if (phase === "error") {
-    return (
-      <div className="space-y-6">
-        <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-6">
-          <div className="flex items-center gap-4">
-            <div className="h-12 w-12 rounded-full bg-red-500/20 flex items-center justify-center">
-              <AlertTriangle size={24} className="text-red-400" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-lg font-semibold text-red-400">Erro</h3>
-              <p className="text-sm text-muted-foreground">{error}</p>
-            </div>
-            <Button onClick={handleReset} variant="outline" className="h-10">
-              <RotateCcw size={16} className="mr-2" /> Tentar novamente
-            </Button>
-          </div>
-        </div>
-      </div>
-    )
-  }
-  return null
+          )}
+        </CardContent>
+      </Card>
+    </div>
+  )
 }

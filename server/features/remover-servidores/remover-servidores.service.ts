@@ -10,11 +10,30 @@ import type { RemoverServidoresConfig } from '../../../src/types/tools'
  */
 export async function removerServidores(cfg: RemoverServidoresConfig) {
   const client = discord.getActiveClient()
+  const currentUserId = client.user?.id
 
-  const servidores = client.guilds.cache.map((g: any) => g)
+  let servidores = client.guilds.cache.map((g: any) => g)
+
+  // 1. Filter by specific guild IDs if provided
+  if (cfg.guildIds && cfg.guildIds.length > 0) {
+    const set = new Set(cfg.guildIds)
+    servidores = servidores.filter((g: any) => set.has(g.id))
+  }
+
+  // 2. Protect owned servers by default
+  const protectOwned = cfg.ignoreOwned !== false
+  if (protectOwned) {
+    servidores = servidores.filter((g: any) => {
+      const isOwner = Boolean(g.ownerId === currentUserId || g.owner)
+      if (isOwner) {
+        logger.info('RemoverServidores', `Protegendo servidor próprio: "${g.name}" (${g.id})`)
+      }
+      return !isOwner
+    })
+  }
 
   if (servidores.length === 0) {
-    throw Object.assign(new Error('Você não está em nenhum servidor.'), { statusCode: 400 })
+    throw Object.assign(new Error('Nenhum servidor elegível para sair (servidores próprios protegidos).'), { statusCode: 400 })
   }
 
   const task = taskManager.createTask('remover-servidores', {

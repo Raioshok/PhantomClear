@@ -9,7 +9,32 @@ const router = Router()
 const removerAmigosSchema = z.object({
   tokenId: z.string(),
   delay: z.number().min(100).default(1000),
+  userIds: z.array(z.string()).optional(),
 })
+
+router.get('/remover-amigos/friends', asyncHandler(async (_req, res) => {
+  const { discord } = await import('../../services/discord.service')
+  const client = discord.getActiveClient()
+  if (!client || !client.isReady()) {
+    throw Object.assign(new Error('Nenhuma conta conectada'), { statusCode: 400 })
+  }
+
+  const friends = []
+  for (const [userId, type] of client.relationships.cache.entries()) {
+    if (type === 1) { // Friend
+      const user = client.users.cache.get(userId)
+      friends.push({
+        id: userId,
+        username: user?.username || 'Usuário',
+        discriminator: user?.discriminator || '0',
+        globalName: user?.globalName || null,
+        avatar: user?.avatar || null,
+      })
+    }
+  }
+
+  res.json({ success: true, data: friends })
+}))
 
 router.post('/remover-amigos', validate(removerAmigosSchema), asyncHandler(async (req, res) => {
   await requireConnected(req.body.tokenId)

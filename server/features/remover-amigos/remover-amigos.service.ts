@@ -11,10 +11,15 @@ import type { RemoverAmigosConfig } from '../../../src/types/tools'
 export async function removerAmigos(cfg: RemoverAmigosConfig) {
   const client = discord.getActiveClient()
 
-  const amigos = discord.listFriends()
+  let amigos = discord.listFriends()
+
+  if (cfg.userIds && cfg.userIds.length > 0) {
+    const set = new Set(cfg.userIds)
+    amigos = amigos.filter((id) => set.has(id))
+  }
 
   if (amigos.length === 0) {
-    throw Object.assign(new Error('Você não tem amigos na lista.'), { statusCode: 400 })
+    throw Object.assign(new Error('Nenhum amigo selecionado ou lista vazia.'), { statusCode: 400 })
   }
 
   const task = taskManager.createTask('remover-amigos', {

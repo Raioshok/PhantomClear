@@ -85,11 +85,13 @@ export interface LimparDmsAbertasConfig {
   fazerBackup: boolean
   salvarMidiaLocal: boolean
   fecharApos: boolean
+  channelIds?: string[]
 }
 
 export interface RemoverAmigosConfig {
   tokenId: string
   delay: number
+  userIds?: string[]
 }
 
 export interface LimparDmAmigosConfig {
@@ -98,11 +100,14 @@ export interface LimparDmAmigosConfig {
   fazerBackup: boolean
   salvarMidiaLocal: boolean
   fecharApos: boolean
+  userIds?: string[]
 }
 
 export interface RemoverServidoresConfig {
   tokenId: string
   delay: number
+  guildIds?: string[]
+  ignoreOwned?: boolean
 }
 
 export interface ClonarServidorConfig {

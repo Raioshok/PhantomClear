@@ -192,14 +192,10 @@ export function initUpdater(mainWindow: BrowserWindow) {
   autoUpdater.autoInstallOnAppQuit = true
   autoUpdater.autoRunAppAfterInstall = true
 
-  const ghToken = process.env.GH_TOKEN || ''
-
   autoUpdater.setFeedURL({
     provider: 'github',
     owner: GITHUB_OWNER,
     repo: GITHUB_REPO,
-    private: true,
-    token: ghToken,
   })
 
   autoUpdater.on('checking-for-update', () => {
