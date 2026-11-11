@@ -32,6 +32,7 @@ import {
   Webhook,
   RotateCw,
   Bot,
+  Gift,
   Plus,
   Terminal,
   Key,
@@ -111,6 +112,7 @@ const secoesMenu: SecaoMenu[] = [
       { titulo: "Remover Amigos", icone: <UserMinus size={16} />, href: "/remover-amigos" },
       { titulo: "Sair de Servidores", icone: <LogOutIcon size={16} />, href: "/sair-servidores" },
       { titulo: "Solicitações & HypeSquad", icone: <UserCheck size={16} />, href: "/solicitacoes-amizade" },
+      { titulo: "Username Sniper", icone: <Crosshair size={16} />, href: "/username-sniper" },
     ],
   },
   {
@@ -161,6 +163,7 @@ const secoesMenu: SecaoMenu[] = [
     alwaysOpen: true,
     itens: [
       { titulo: "Tasks", icone: <ListTodo size={16} />, href: "/tasks" },
+      { titulo: "Nitro Sniper", icone: <Gift size={16} />, href: "/nitro-sniper" },
       { titulo: "Status Rotator", icone: <RotateCw size={16} />, href: "/status-rotator" },
       { titulo: "Auto-Responder", icone: <Bot size={16} />, href: "/auto-responder" },
       { titulo: "Prefix Commands", icone: <Terminal size={16} />, href: "/prefix-commands" },

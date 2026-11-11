@@ -223,6 +223,10 @@ class ApiClient {
   getServersForLeaving() { return this.get<Array<{ id: string; name: string; icon: string | null; memberCount: number; isOwner: boolean }>>('/tools/remover-servidores/guilds') }
   getFriendsForRemoval() { return this.get<Array<{ id: string; username: string; discriminator: string; globalName: string | null; avatar: string | null }>>('/tools/remover-amigos/friends') }
   getOpenDmsForCleaning() { return this.get<Array<{ id: string; recipientId: string; username: string; globalName: string | null; avatar: string | null; lastMessageId: string }>>('/tools/limpar-dms-abertas/channels') }
+
+  // Username Sniper
+  getUsernameSniperResults() { return this.get<{ available: string[]; history: any[] }>('/tools/username-sniper/results') }
+  startUsernameSniper(cfg: any) { return this.post<{ taskId: string; totalCandidates: number }>('/tools/username-sniper/start', cfg) }
 }
 
 export const api = new ApiClient()

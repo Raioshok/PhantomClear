@@ -5,7 +5,7 @@ import {
   LayoutDashboard, User, BarChart3, Trash2, Package, MessageSquare, PhoneOff,
   UserMinus, LogOut, Copy, Image, MoveRight, Timer, MicOff, VolumeX, Users,
   Anchor, Shield, Crosshair, PieChart, Archive, Radio, BellRing, Settings,
-  ListTodo, Terminal, Gamepad2, Search, X, UserCheck, Webhook, RotateCw, Bot,
+  ListTodo, Terminal, Gamepad2, Search, X, UserCheck, Webhook, RotateCw, Bot, Gift,
 } from "lucide-react"
 import { ThemedIcon } from "@/components/themed-icon"
 import { xpIconForRoute } from "@/lib/xp-icons"
@@ -48,6 +48,7 @@ const GROUPS: PaletteGroup[] = [
       { label: "Remover Amigos", href: "/remover-amigos", icon: UserMinus },
       { label: "Sair de Servidores", href: "/sair-servidores", icon: LogOut },
       { label: "Solicitações & HypeSquad", href: "/solicitacoes-amizade", icon: UserCheck, keywords: ["amigos", "hypesquad", "pedidos"] },
+      { label: "Username Sniper", href: "/username-sniper", icon: Crosshair, keywords: ["username", "tag", "sniper", "pomelo"] },
     ],
   },
   {
@@ -92,8 +93,9 @@ const GROUPS: PaletteGroup[] = [
     heading: "Sistema",
     items: [
       { label: "Tasks", href: "/tasks", icon: ListTodo },
+      { label: "Nitro Sniper", href: "/nitro-sniper", icon: Gift, keywords: ["nitro", "gift", "sniper", "claim"] },
       { label: "Status Rotator", href: "/status-rotator", icon: RotateCw, keywords: ["status", "bio", "rotacao"] },
-      { label: "Auto-Responder & Nitro", href: "/auto-responder", icon: Bot, keywords: ["responder", "nitro", "gift", "sniffer"] },
+      { label: "Auto-Responder", href: "/auto-responder", icon: Bot, keywords: ["responder", "afk", "auto"] },
       { label: "Prefix Commands", href: "/prefix-commands", icon: Terminal },
       { label: "Rich Presence", href: "/rpc", icon: Gamepad2 },
       { label: "Configurações", href: "/configuracoes", icon: Settings },

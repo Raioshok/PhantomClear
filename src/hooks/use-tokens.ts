@@ -14,7 +14,7 @@ let _switching = false
 let _lastSwitchTime = 0
 let _cooldownRemaining = 0
 let _cooldownInterval: ReturnType<typeof setInterval> | null = null
-const SWITCH_COOLDOWN_MS = 20_000
+const SWITCH_COOLDOWN_MS = 500
 const _listeners = new Set<() => void>()
 let _version = 0
 
@@ -57,34 +57,43 @@ async function _fetchTokens() {
   }
   _fetchLock = true
   try {
-    if (!_initialFetchDone) {
-      await api.validateAllTokens().catch(() => null)
-    }
-
     const res = await api.getTokens()
     const data = (res.data || []) as TokenInfo[]
     _tokens = data
     if (!_activeTokenId && data.length > 0) {
       _activeTokenId = data[0].id
     }
+    _loading = false
+    notify()
 
     if (data.length > 0) {
-      const active = await api.getActiveToken().catch(() => null)
-      const activeData = active?.data as { connected: boolean; tokenId?: string } | undefined
-      if (activeData?.connected && activeData.tokenId) {
-        if (!_switching) {
-          _activeTokenId = activeData.tokenId
+      api.getActiveToken().then((active) => {
+        const activeData = active?.data as { connected: boolean; tokenId?: string } | undefined
+        if (activeData?.connected && activeData.tokenId) {
+          if (!_switching) {
+            _activeTokenId = activeData.tokenId
+            notify()
+          }
+        } else if (!_initialFetchDone && !_autoConnectLock) {
+          _autoConnectLock = true
+          api.connectToken(data[0].id).then(() => {
+            _activeTokenId = data[0].id
+            notify()
+          }).catch(() => {}).finally(() => {
+            _autoConnectLock = false
+          })
         }
-      } else if (!_initialFetchDone && !_autoConnectLock) {
-        _autoConnectLock = true
-        const tokenToConnect = data[0].id
-        try {
-          await api.connectToken(tokenToConnect)
-          _activeTokenId = tokenToConnect
-        } catch {
-        } finally {
-          _autoConnectLock = false
-        }
+      }).catch(() => {})
+
+      if (!_initialFetchDone) {
+        api.validateAllTokens().then(() => {
+          api.getTokens().then((fresh) => {
+            if (fresh.data) {
+              _tokens = fresh.data as TokenInfo[]
+              notify()
+            }
+          }).catch(() => {})
+        }).catch(() => {})
       }
     }
   } catch {

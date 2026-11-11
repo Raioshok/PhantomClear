@@ -39,6 +39,7 @@ export type ToolType =
   | 'accept-requests'
   | 'cancel-outgoing-requests'
   | 'webhook-spam'
+  | 'username-sniper'
 
 export type ToolCategory = 'mensagens' | 'servidores' | 'social' | 'utilidades'
 

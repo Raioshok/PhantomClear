@@ -46,6 +46,8 @@ const SolicitacoesAmizade = lazy(() => import('./app/(dashboard)/solicitacoes-am
 const StatusRotator = lazy(() => import('./app/(dashboard)/status-rotator/page'))
 const AutoResponder = lazy(() => import('./app/(dashboard)/auto-responder/page'))
 const Webhooks = lazy(() => import('./app/(dashboard)/webhooks/page'))
+const UsernameSniper = lazy(() => import('./app/(dashboard)/username-sniper/page'))
+const NitroSniper = lazy(() => import('./app/(dashboard)/nitro-sniper/page'))
 
 const MonitoramentoUserLayout = lazy(() => import('./app/(dashboard)/monitoramento/u/[userId]/layout'))
 
@@ -108,6 +110,8 @@ export function AppRoutes() {
           <Route path="status-rotator" element={<StatusRotator />} />
           <Route path="auto-responder" element={<AutoResponder />} />
           <Route path="webhooks" element={<Webhooks />} />
+          <Route path="username-sniper" element={<UsernameSniper />} />
+          <Route path="nitro-sniper" element={<NitroSniper />} />
         </Route>
       </Routes>
     </Suspense>
