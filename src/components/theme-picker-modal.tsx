@@ -8,7 +8,7 @@ import { ColorPicker } from '@/components/ui/color-picker'
 
 const COLOR_PRESETS = ['#ffffff', '#00ff88', '#ff6b6b', '#4ecdc4', '#ffe66d', '#a855f7', '#3b82f6', '#f43f5e']
 const CHARACTER_THEMES = new Set(['hello-kitty', 'kuromi', 'spongebob', 'my-little-pony'])
-const LIGHT_THEMES = new Set(['windows-xp', 'sketch', 'manga', 'neo-brutalism', 'spongebob'])
+const LIGHT_THEMES = new Set(['windows-xp', 'sketch', 'manga', 'neo-brutalism', 'spongebob', 'sakura-blossom'])
 const normalize = (text: string) => text.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
 
 interface ThemePickerModalProps {
