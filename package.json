@@ -1,6 +1,6 @@
 {
   "name": "phantomclear",
-  "version": "1.4.4",
+  "version": "1.4.5",
   "private": false,
   "main": "dist-electron/electron/main.js",
   "scripts": {
@@ -10,7 +10,9 @@
     "lint": "eslint .",
     "dev:electron": "tsc -p tsconfig.electron.json && concurrently \"vite\" \"tsc -p tsconfig.electron.json -w --preserveWatchOutput\" \"wait-on http://localhost:3000 && electron .\"",
     "changelog": "node scripts/dev-changelog.mjs",
-    "build:electron": "vite build && tsc -p tsconfig.electron.json && electron-builder --win",
+    "bump": "node scripts/bump-version.mjs",
+    "build:electron": "node scripts/bump-version.mjs && vite build && tsc -p tsconfig.electron.json && electron-builder --win",
+    "release": "node scripts/publish-release.mjs",
     "postinstall": "electron-builder install-app-deps"
   },
   "dependencies": {
