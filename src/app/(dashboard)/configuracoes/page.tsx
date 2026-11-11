@@ -19,7 +19,11 @@ import {
   Grid3x3,
   Type,
   Square,
+  RotateCw,
+  Download,
+  CheckCircle2,
 } from "lucide-react"
+import { useUpdater } from "@/hooks/use-updater"
 import { api } from "@/lib/api-client"
 import { aplicarCorPainel, aplicarAparencia, aplicarTema, resetarTema } from "@/hooks/use-cor-painel"
 import { TEMAS, getTema } from "@/lib/themes"
@@ -48,6 +52,7 @@ const DELAY_OPTIONS = [
 ]
 
 export default function PaginaConfiguracoes() {
+  const { status: updateStatus, checkForUpdates, downloadUpdate, installUpdate } = useUpdater()
   const [settings, setSettings] = useState<Partial<AppSettings>>({
     corPainel: "#ffffff",
     tema: "custom",
@@ -540,6 +545,97 @@ export default function PaginaConfiguracoes() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="rounded-2xl border border-primary/20 bg-primary/5 p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/15 text-primary shadow-xs">
+              <RotateCw size={18} />
+            </div>
+            <div>
+              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                Atualizações do PhantomClear
+                <span className="rounded-full bg-primary/20 px-2 py-0.5 text-[10px] font-bold text-primary font-mono">
+                  v{import.meta.env.VITE_APP_VERSION || '1.4.5'}
+                </span>
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Verificação automática a cada 10 minutos e na inicialização da aplicação.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {updateStatus.status === 'downloaded' ? (
+              <Button
+                onClick={() => installUpdate()}
+                className="bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs gap-1.5 shadow-md"
+              >
+                <Download size={14} />
+                Reiniciar e Atualizar
+              </Button>
+            ) : updateStatus.status === 'available' ? (
+              <Button
+                onClick={() => downloadUpdate()}
+                className="bg-emerald-500 hover:bg-emerald-400 text-black font-semibold text-xs gap-1.5 shadow-md"
+              >
+                <Download size={14} />
+                Baixar v{updateStatus.version}
+              </Button>
+            ) : (
+              <Button
+                variant="outline"
+                onClick={() => checkForUpdates()}
+                disabled={updateStatus.status === 'checking'}
+                className="text-xs font-semibold gap-1.5"
+              >
+                {updateStatus.status === 'checking' ? (
+                  <Loader2 size={13} className="animate-spin" />
+                ) : (
+                  <RotateCw size={13} />
+                )}
+                {updateStatus.status === 'checking' ? 'Buscando...' : 'Verificar Atualizações'}
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {updateStatus.status === 'checking' && (
+          <p className="text-xs text-muted-foreground flex items-center gap-1.5">
+            <Loader2 size={12} className="animate-spin text-primary" />
+            Consultando repositório oficial de releases no GitHub...
+          </p>
+        )}
+
+        {updateStatus.status === 'available' && (
+          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-xs text-emerald-300 flex items-center gap-2">
+            <CheckCircle2 size={14} className="text-emerald-400 shrink-0" />
+            <span>Nova versão <strong>v{updateStatus.version}</strong> disponível para download!</span>
+          </div>
+        )}
+
+        {updateStatus.status === 'downloading' && (
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-xs text-muted-foreground">
+              <span>Baixando atualização...</span>
+              <span>{Math.round(updateStatus.percent)}%</span>
+            </div>
+            <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+              <div
+                className="h-full bg-emerald-400 transition-all duration-300"
+                style={{ width: `${updateStatus.percent}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {updateStatus.status === 'not-available' && (
+          <p className="text-xs text-emerald-400 flex items-center gap-1.5 font-medium">
+            <CheckCircle2 size={13} />
+            Você já está utilizando a versão mais recente do PhantomClear!
+          </p>
+        )}
       </div>
 
       <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-6">

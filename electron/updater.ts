@@ -188,7 +188,8 @@ export function initUpdater(mainWindow: BrowserWindow) {
 
   if (isDev) return
 
-  autoUpdater.autoDownload = false
+  autoUpdater.logger = console
+  autoUpdater.autoDownload = true
   autoUpdater.autoInstallOnAppQuit = true
   autoUpdater.autoRunAppAfterInstall = true
 
@@ -230,9 +231,14 @@ export function initUpdater(mainWindow: BrowserWindow) {
 
   setTimeout(() => {
     autoUpdater.checkForUpdates().catch(() => {})
-  }, 5000)
+  }, 2000)
 
+  setTimeout(() => {
+    autoUpdater.checkForUpdates().catch(() => {})
+  }, 15000)
+
+  // Intervalo reduzido para 10 minutos (em vez de 30)
   setInterval(() => {
     autoUpdater.checkForUpdates().catch(() => {})
-  }, 30 * 60 * 1000)
+  }, 10 * 60 * 1000)
 }
