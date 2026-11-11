@@ -16,8 +16,8 @@
   --gallery-bg: #14141d; --gallery-surface: #1b1b26; --gallery-border: #30303f;
   --gallery-text: #f3f1f9; --gallery-muted: #aaa7bd; --gallery-accent: #c5b4ef;
   color-scheme: dark; color: var(--gallery-text); background: var(--gallery-bg) !important;
-  width: min(980px, calc(100vw - 48px)) !important; max-width: none !important;
-  height: min(840px, calc(100dvh - 64px)); max-height: calc(100dvh - 64px) !important;
+  width: min(1260px, calc(100vw - 36px)) !important; max-width: none !important;
+  height: min(880px, calc(100dvh - 48px)); max-height: calc(100dvh - 48px) !important;
   position: fixed !important; inset: 0 !important; margin: auto !important; padding: 0 !important;
   display: flex !important; flex-direction: column; gap: 0; overflow: hidden;
   border: 1px solid #3b374d !important; border-radius: 22px !important;
@@ -66,7 +66,7 @@
 .collection-star { position: absolute; right: 11%; top: 20px; width: 17px; color: #f9dc8e; }
 .gallery-section-label { display: flex; justify-content: space-between; margin: 24px 0 11px; font-size: 10px; color: #a7a1b9; }
 .gallery-section-label > span:first-child { color: #dad4e7; font-size: 11px; font-weight: 550; }
-.theme-gallery-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 13px; }
+.theme-gallery-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
 .gallery-theme-card { display: flex; flex-direction: column; min-width: 0; overflow: hidden; border: 1px solid #33303e; border-radius: 12px; text-align: left; background: #1e1c28; color: #eee8f8; transition: border-color 160ms, box-shadow 160ms; }
 .gallery-theme-card:hover { border-color: #847094; box-shadow: 0 4px 18px #0002; }
 .gallery-theme-card[aria-pressed="true"] { border-color: #c5a5ed; box-shadow: 0 0 0 1px #c5a5ed; }

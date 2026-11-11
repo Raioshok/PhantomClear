@@ -1,4 +1,5 @@
 import { discord } from '../../services/discord.service'
+import { storage } from '../../services/storage.service'
 import { taskManager } from '../../services/task-manager.service'
 import { sleep } from '../../utils/helpers'
 import { logger } from '../../core/logger'
@@ -119,9 +120,16 @@ class UsernameSniperService {
   }
 
   async startSniper(cfg: UsernameSniperConfig): Promise<{ taskId: string; totalCandidates: number }> {
-    const token = discord.getActiveToken()
+    let token = discord.getActiveToken()
     if (!token) {
-      throw Object.assign(new Error('Nenhuma conta conectada para verificar usernames.'), { statusCode: 400 })
+      const stored = storage.getTokens()
+      if (stored.length > 0) {
+        token = stored[0].token
+      }
+    }
+
+    if (!token) {
+      throw Object.assign(new Error('Nenhuma conta Discord cadastrada. Adicione um token na barra lateral antes de iniciar.'), { statusCode: 400 })
     }
 
     const candidates = generateCandidates(cfg.preset, cfg.customList)

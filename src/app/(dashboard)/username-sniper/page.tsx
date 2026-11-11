@@ -13,6 +13,7 @@ import {
   Clock,
   Trophy,
   Terminal,
+  Zap,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -33,7 +34,7 @@ interface CheckItem {
 }
 
 export default function PaginaUsernameSniper() {
-  const { activeToken } = useTokens()
+  const { activeToken, tokens } = useTokens()
   const [preset, setPreset] = useState<UsernamePreset>("3letter")
   const [customListText, setCustomListText] = useState("")
   const [delay, setDelay] = useState(1200)
@@ -41,9 +42,11 @@ export default function PaginaUsernameSniper() {
   const [autoClaim, setAutoClaim] = useState(false)
   const [password, setPassword] = useState("")
 
+  const [starting, setStarting] = useState(false)
   const [running, setRunning] = useState(false)
   const [activeTaskId, setActiveTaskId] = useState<string | null>(null)
   const [progressMsg, setProgressMsg] = useState("")
+  const [errorMessage, setErrorMessage] = useState("")
   const [progress, setProgress] = useState(0)
   const [total, setTotal] = useState(0)
 
@@ -56,13 +59,17 @@ export default function PaginaUsernameSniper() {
       setProgressMsg(ev.message)
       setProgress(ev.progress)
       setTotal(ev.total)
+      setRunning(true)
+      setStarting(false)
     }
   })
 
   useWSEvent<WSToolCompleted>("tool:completed", (ev) => {
     if (ev.taskId === activeTaskId) {
       setRunning(false)
+      setStarting(false)
       setActiveTaskId(null)
+      setProgressMsg("Varredura finalizada!")
       loadResults()
     }
   })
@@ -70,7 +77,9 @@ export default function PaginaUsernameSniper() {
   useWSEvent<WSToolError>("tool:error", (ev) => {
     if (ev.taskId === activeTaskId) {
       setRunning(false)
+      setStarting(false)
       setActiveTaskId(null)
+      setErrorMessage(ev.error || "Erro durante a execução")
       setProgressMsg(`Erro: ${ev.error}`)
     }
   })
@@ -98,9 +107,16 @@ export default function PaginaUsernameSniper() {
   }
 
   const handleStart = async () => {
-    if (!activeToken) return
-    setRunning(true)
-    setProgressMsg("Iniciando varredura...")
+    setErrorMessage("")
+
+    const effectiveToken = activeToken || (tokens.length > 0 ? tokens[0] : null)
+    if (!effectiveToken) {
+      setErrorMessage("Nenhuma conta Discord cadastrada. Adicione uma conta no menu lateral para iniciar.")
+      return
+    }
+
+    setStarting(true)
+    setProgressMsg("Iniciando varredura e gerando candidatos...")
 
     const customItems = preset === "custom"
       ? customListText.split(/[\n, ]+/).map((s) => s.trim()).filter(Boolean)
@@ -119,9 +135,16 @@ export default function PaginaUsernameSniper() {
       if (res.data?.taskId) {
         setActiveTaskId(res.data.taskId)
         setTotal(res.data.totalCandidates)
+        setProgress(0)
+        setRunning(true)
+      } else {
+        setErrorMessage("Não foi possível criar a tarefa de varredura.")
       }
-    } catch {
-      setRunning(false)
+    } catch (err: any) {
+      setErrorMessage(err.message || "Falha ao iniciar varredura.")
+      setProgressMsg("")
+    } finally {
+      setStarting(false)
     }
   }
 
@@ -131,7 +154,9 @@ export default function PaginaUsernameSniper() {
       await api.cancelTask(activeTaskId)
     } catch {}
     setRunning(false)
+    setStarting(false)
     setActiveTaskId(null)
+    setProgressMsg("Varredura interrompida.")
   }
 
   const copyToClipboard = (text: string) => {
@@ -152,6 +177,13 @@ export default function PaginaUsernameSniper() {
         </p>
       </div>
 
+      {errorMessage && (
+        <div className="flex items-center gap-2.5 rounded-2xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs font-semibold text-rose-300">
+          <AlertTriangle className="h-4 w-4 shrink-0 text-rose-400" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
+
       {/* Presets Grid */}
       <Card>
         <CardHeader className="pb-3">
@@ -164,11 +196,12 @@ export default function PaginaUsernameSniper() {
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             <button
+              type="button"
               onClick={() => setPreset("3letter")}
-              className={`flex flex-col items-center justify-center rounded-2xl border p-3.5 text-center transition-all ${
+              className={`flex flex-col items-center justify-center rounded-2xl border p-3.5 text-center transition-all cursor-pointer ${
                 preset === "3letter"
-                  ? "border-primary bg-primary/10 shadow-md shadow-primary/15"
-                  : "border-border/70 bg-card/60 hover:border-primary/40"
+                  ? "border-primary bg-primary/10 shadow-md shadow-primary/15 ring-1 ring-primary"
+                  : "border-border/70 bg-card/60 hover:border-primary/40 hover:bg-secondary/20"
               }`}
             >
               <span className="font-mono font-bold text-sm text-primary">aaa</span>
@@ -177,11 +210,12 @@ export default function PaginaUsernameSniper() {
             </button>
 
             <button
+              type="button"
               onClick={() => setPreset("4letter")}
-              className={`flex flex-col items-center justify-center rounded-2xl border p-3.5 text-center transition-all ${
+              className={`flex flex-col items-center justify-center rounded-2xl border p-3.5 text-center transition-all cursor-pointer ${
                 preset === "4letter"
-                  ? "border-primary bg-primary/10 shadow-md shadow-primary/15"
-                  : "border-border/70 bg-card/60 hover:border-primary/40"
+                  ? "border-primary bg-primary/10 shadow-md shadow-primary/15 ring-1 ring-primary"
+                  : "border-border/70 bg-card/60 hover:border-primary/40 hover:bg-secondary/20"
               }`}
             >
               <span className="font-mono font-bold text-sm text-primary">aaaa</span>
@@ -190,11 +224,12 @@ export default function PaginaUsernameSniper() {
             </button>
 
             <button
+              type="button"
               onClick={() => setPreset("3char")}
-              className={`flex flex-col items-center justify-center rounded-2xl border p-3.5 text-center transition-all ${
+              className={`flex flex-col items-center justify-center rounded-2xl border p-3.5 text-center transition-all cursor-pointer ${
                 preset === "3char"
-                  ? "border-primary bg-primary/10 shadow-md shadow-primary/15"
-                  : "border-border/70 bg-card/60 hover:border-primary/40"
+                  ? "border-primary bg-primary/10 shadow-md shadow-primary/15 ring-1 ring-primary"
+                  : "border-border/70 bg-card/60 hover:border-primary/40 hover:bg-secondary/20"
               }`}
             >
               <span className="font-mono font-bold text-sm text-primary">a1_</span>
@@ -203,11 +238,12 @@ export default function PaginaUsernameSniper() {
             </button>
 
             <button
+              type="button"
               onClick={() => setPreset("4char")}
-              className={`flex flex-col items-center justify-center rounded-2xl border p-3.5 text-center transition-all ${
+              className={`flex flex-col items-center justify-center rounded-2xl border p-3.5 text-center transition-all cursor-pointer ${
                 preset === "4char"
-                  ? "border-primary bg-primary/10 shadow-md shadow-primary/15"
-                  : "border-border/70 bg-card/60 hover:border-primary/40"
+                  ? "border-primary bg-primary/10 shadow-md shadow-primary/15 ring-1 ring-primary"
+                  : "border-border/70 bg-card/60 hover:border-primary/40 hover:bg-secondary/20"
               }`}
             >
               <span className="font-mono font-bold text-sm text-primary">a123</span>
@@ -216,11 +252,12 @@ export default function PaginaUsernameSniper() {
             </button>
 
             <button
+              type="button"
               onClick={() => setPreset("rare-words")}
-              className={`flex flex-col items-center justify-center rounded-2xl border p-3.5 text-center transition-all ${
+              className={`flex flex-col items-center justify-center rounded-2xl border p-3.5 text-center transition-all cursor-pointer ${
                 preset === "rare-words"
-                  ? "border-primary bg-primary/10 shadow-md shadow-primary/15"
-                  : "border-border/70 bg-card/60 hover:border-primary/40"
+                  ? "border-primary bg-primary/10 shadow-md shadow-primary/15 ring-1 ring-primary"
+                  : "border-border/70 bg-card/60 hover:border-primary/40 hover:bg-secondary/20"
               }`}
             >
               <span className="font-mono font-bold text-sm text-primary">void</span>
@@ -229,11 +266,12 @@ export default function PaginaUsernameSniper() {
             </button>
 
             <button
+              type="button"
               onClick={() => setPreset("custom")}
-              className={`flex flex-col items-center justify-center rounded-2xl border p-3.5 text-center transition-all ${
+              className={`flex flex-col items-center justify-center rounded-2xl border p-3.5 text-center transition-all cursor-pointer ${
                 preset === "custom"
-                  ? "border-primary bg-primary/10 shadow-md shadow-primary/15"
-                  : "border-border/70 bg-card/60 hover:border-primary/40"
+                  ? "border-primary bg-primary/10 shadow-md shadow-primary/15 ring-1 ring-primary"
+                  : "border-border/70 bg-card/60 hover:border-primary/40 hover:bg-secondary/20"
               }`}
             >
               <span className="font-mono font-bold text-sm text-primary">...</span>
@@ -317,19 +355,39 @@ export default function PaginaUsernameSniper() {
 
           <div className="flex items-center justify-between pt-2">
             <span className="text-xs text-muted-foreground">
-              {progressMsg || "Pronto para iniciar."}
+              {progressMsg || (running ? "Varredura ativa..." : "Pronto para iniciar.")}
             </span>
 
             {running ? (
-              <Button onClick={handleStop} variant="destructive" className="gap-2 font-semibold">
+              <Button onClick={handleStop} variant="destructive" className="gap-2 font-semibold shadow-md">
                 <StopCircle className="h-4 w-4" /> Parar ({progress}/{total})
               </Button>
             ) : (
-              <Button onClick={handleStart} className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold gap-2 shadow-md">
-                <Crosshair className="h-4 w-4" /> Iniciar Varredura
+              <Button
+                onClick={handleStart}
+                disabled={starting}
+                className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold gap-2 shadow-md cursor-pointer"
+              >
+                {starting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Crosshair className="h-4 w-4" />}
+                {starting ? "Iniciando..." : "Iniciar Varredura"}
               </Button>
             )}
           </div>
+
+          {running && total > 0 && (
+            <div className="space-y-1 pt-2">
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>Progresso</span>
+                <span>{progress} de {total} ({Math.round((progress / total) * 100)}%)</span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-secondary">
+                <div
+                  className="h-full bg-primary transition-all duration-300"
+                  style={{ width: `${(progress / total) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
 
