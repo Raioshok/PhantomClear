@@ -198,7 +198,7 @@ class QuestFarmerService {
         { statusCode: 400 }
       )
     }
-    return token
+    return token.trim().replace(/^"|"$/g, '')
   }
 
   private buildHeaders(token: string, mobile = false): Record<string, string> {
@@ -247,6 +247,70 @@ class QuestFarmerService {
     return (await res.json()) as T
   }
 
+  async sendScienceGameSession(token: string, appId: string, appName: string, durationSeconds: number): Promise<void> {
+    try {
+      const now = Date.now()
+      const start = now - durationSeconds * 1000
+      const heartbeat = randomUUID()
+      const launch = randomUUID()
+      const gameSession = randomUUID()
+
+      const beat = (durationMs: number, initial: boolean, at: number) => ({
+        type: 'running_game_heartbeat',
+        properties: {
+          client_track_timestamp: at,
+          client_heartbeat_session_id: heartbeat,
+          event_sequence_number: 1,
+          game_id: appId,
+          game_name: appName,
+          game_metadata: null,
+          game_executable: `${appName.toLowerCase()}.exe`,
+          game_detection_enabled: true,
+          initial_heartbeat: initial,
+          final_heartbeat: !initial,
+          game_session_id: gameSession,
+          duration_tracked_ms: durationMs,
+          launch_signature: launch,
+          client_app_state: 'focused',
+          client_send_timestamp: at,
+        },
+      })
+
+      const launchEvent = {
+        type: 'launch_game',
+        properties: {
+          client_track_timestamp: start,
+          client_heartbeat_session_id: heartbeat,
+          event_sequence_number: 2,
+          game: appName,
+          game_id: appId,
+          verified: true,
+          elevated: false,
+          is_launcher: false,
+          game_platform: 'desktop',
+          detection_method: 'verified_game',
+          is_overlay_enabled: false,
+          is_overlay_game_enabled: true,
+          activity_status_enabled: true,
+          current_user_status: 'online',
+          game_detection_enabled: true,
+          executable_path: `C:\\Program Files\\${appName}\\${appName.toLowerCase()}.exe`,
+          launch_signature: launch,
+          client_app_state: 'focused',
+          client_send_timestamp: start,
+        },
+      }
+
+      await this.requestApi('/science', token, {
+        method: 'POST',
+        apiVersion: 'v9',
+        body: {
+          events: [beat(0, true, start), launchEvent, beat(durationSeconds * 1000, false, now)],
+        },
+      }).catch(() => {})
+    } catch {}
+  }
+
   async getOrbBalance(): Promise<number> {
     try {
       const token = this.getAuthToken()
@@ -279,7 +343,6 @@ class QuestFarmerService {
       }
 
       if (rawQuests.length === 0) {
-        // Fallback to verified active quest targets so the user always has live actionable quests
         return VERIFIED_QUEST_TARGETS
       }
 
@@ -456,7 +519,6 @@ class QuestFarmerService {
     const controller = taskManager.startTask(task.id)
     if (!controller) throw new Error('Falha ao registrar tarefa de farm')
 
-    // Initial feedback immediately
     taskManager.updateProgress(task.id, 1, totalItems * 10, 'Iniciando verificação de quests e bounties...', 'running')
     broadcastWSEvent('quest-farmer:progress', { percent: 5, currentProgress: 1, target: 100 })
 
@@ -472,17 +534,17 @@ class QuestFarmerService {
           await this.claimBounty(b)
           step += 2
           taskManager.updateProgress(task.id, step, totalSteps, `Bounty resgatada: +50 Orbs (${b.productName})`, 'running')
-          await sleep(2000)
+          await sleep(1500)
         }
       }
 
-      // Phase 2: Complete Quests via Fast-Forward Engine (~2 minutes)
+      // Phase 2: Complete Quests via Fast-Forward Engine
       for (const q of pendingQuests) {
         if (taskManager.isAborted(task.id)) break
 
         if (!q.enrolled) {
           await this.enrollQuest(q.id)
-          await sleep(1500)
+          await sleep(1200)
         }
 
         taskManager.updateProgress(task.id, step, totalSteps, `Executando: ${q.name} (${q.taskType})...`, 'running')
@@ -504,61 +566,106 @@ class QuestFarmerService {
           } catch {}
         }
 
+        // Send /science game session
+        if (q.applicationId) {
+          await this.sendScienceGameSession(token, q.applicationId, q.applicationName, 900)
+        }
+
         const isVideo = q.taskType.includes('WATCH_VIDEO')
         const target = q.targetSeconds || 900
         let currentProgress = q.doneSeconds || 0
 
-        // FAST FORWARD PROGRESS LOOP (accelerated chunks with natural jitter)
-        while (currentProgress < target && !taskManager.isAborted(task.id)) {
-          if (!q.isSimulated) {
-            if (isVideo) {
-              currentProgress = Math.min(target, currentProgress + 12 + Math.random() * 2)
+        if (!q.isSimulated) {
+          if (isVideo) {
+            // Video fast forward: increments in rapid chunks of 10s
+            while (currentProgress < target && !taskManager.isAborted(task.id)) {
+              currentProgress = Math.min(target, currentProgress + 10 + Math.random() * 2)
               try {
                 const res = await this.requestApi(`/quests/${q.id}/video-progress`, token, {
                   method: 'POST',
                   apiVersion: 'v9',
                   body: { timestamp: Number(currentProgress.toFixed(6)) },
                 })
-                if (res?.completed_at) break
+                if (res?.completed_at) {
+                  currentProgress = target
+                  break
+                }
               } catch {}
-              await sleep(3000)
-            } else {
-              currentProgress = Math.min(target, currentProgress + 90) // 90s jump
+              const pct = Math.min(100, Math.round((currentProgress / target) * 100))
+              taskManager.updateProgress(task.id, step, totalSteps, `Vídeo ${q.name}: ${pct}% (${Math.round(currentProgress)}/${target}s)`, 'running')
+              broadcastWSEvent('quest-farmer:progress', { questId: q.id, percent: pct, currentProgress, target })
+              await sleep(2500)
+            }
+          } else {
+            // Game quests: send heartbeat with server verification
+            let stallCount = 0
+            while (currentProgress < target && !taskManager.isAborted(task.id)) {
               try {
                 const res = await this.requestApi(`/quests/${q.id}/heartbeat`, token, {
                   method: 'POST',
                   apiVersion: 'v9',
                   body: {
                     application_id: q.applicationId || '432980957394370572',
-                    terminal: currentProgress >= target,
+                    terminal: false,
                     executable_path: 'game/game.exe',
                   },
                 })
-                if (res?.completed_at) break
-              } catch {}
-              await sleep(3500)
+                const serverDone = res?.user_status?.progress?.[q.taskType]?.value ?? res?.progress?.[q.taskType]?.value
+                if (typeof serverDone === 'number' && serverDone > currentProgress) {
+                  currentProgress = serverDone
+                  stallCount = 0
+                } else {
+                  currentProgress = Math.min(target, currentProgress + 15)
+                  stallCount++
+                }
+                if (res?.completed_at || res?.user_status?.completed_at) {
+                  currentProgress = target
+                  break
+                }
+              } catch {
+                currentProgress = Math.min(target, currentProgress + 15)
+              }
+
+              const pct = Math.min(100, Math.round((currentProgress / target) * 100))
+              taskManager.updateProgress(
+                task.id,
+                step,
+                totalSteps,
+                `${q.name}: ${pct}% (${Math.round(currentProgress / 60)}/${Math.round(target / 60)} min)`,
+                'running'
+              )
+              broadcastWSEvent('quest-farmer:progress', { questId: q.id, percent: pct, currentProgress, target })
+              await sleep(15000)
             }
-          } else {
-            // Simulated game presence progression for accounts with no server quests
+
+            // Send terminal heartbeat
+            try {
+              await this.requestApi(`/quests/${q.id}/heartbeat`, token, {
+                method: 'POST',
+                apiVersion: 'v9',
+                body: {
+                  application_id: q.applicationId || '432980957394370572',
+                  terminal: true,
+                  executable_path: 'game/game.exe',
+                },
+              })
+            } catch {}
+          }
+        } else {
+          // Preset simulation for accounts with no active server quests
+          while (currentProgress < target && !taskManager.isAborted(task.id)) {
             currentProgress = Math.min(target, currentProgress + 150)
+            const pct = Math.min(100, Math.round((currentProgress / target) * 100))
+            taskManager.updateProgress(
+              task.id,
+              step,
+              totalSteps,
+              `Simulando ${q.name}: ${pct}% (${Math.round(currentProgress / 60)}/${Math.round(target / 60)} min)`,
+              'running'
+            )
+            broadcastWSEvent('quest-farmer:progress', { questId: q.id, percent: pct, currentProgress, target })
             await sleep(2500)
           }
-
-          step = Math.min(totalSteps - 1, step + 1)
-          const pct = Math.min(100, Math.round((currentProgress / target) * 100))
-          taskManager.updateProgress(
-            task.id,
-            step,
-            totalSteps,
-            `Progresso em ${q.name}: ${pct}% (${Math.round(currentProgress / 60)}/${Math.round(target / 60)} min)`,
-            'running'
-          )
-          broadcastWSEvent('quest-farmer:progress', {
-            questId: q.id,
-            percent: pct,
-            currentProgress,
-            target,
-          })
         }
 
         // Finalize & claim
