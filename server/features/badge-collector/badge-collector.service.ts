@@ -354,7 +354,7 @@ class BadgeCollectorService {
 
     ;(async () => {
       let doneHours = 0
-      const chunkHours = 24
+      const chunkHours = 72
       const cursor = Date.now()
       const heartbeat = randomUUID()
       const launch = randomUUID()
@@ -364,7 +364,7 @@ class BadgeCollectorService {
         task.id,
         0,
         hours,
-        `Iniciando farm de ${hours}h em ${game.name} via /science...`,
+        `Iniciando farm de ${hours}h em ${game.name} via /science turbo...`,
         'running'
       )
 
@@ -438,7 +438,7 @@ class BadgeCollectorService {
           'running'
         )
         broadcastWSEvent('badge-collector:progress', { done: doneHours, total: hours })
-        await sleep(1000)
+        await sleep(120)
       }
 
       taskManager.completeTask(task.id)
@@ -532,7 +532,7 @@ class BadgeCollectorService {
           'running'
         )
         broadcastWSEvent('badge-collector:progress', { done, total: selectedGames.length })
-        await sleep(800)
+        await sleep(80)
       }
 
       taskManager.completeTask(task.id)
