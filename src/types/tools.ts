@@ -44,6 +44,7 @@ export type ToolType =
   | 'badge-collector'
   | 'autobump'
   | 'scheduler'
+  | 'giveaways'
 
 export type ToolCategory = 'mensagens' | 'servidores' | 'social' | 'utilidades'
 

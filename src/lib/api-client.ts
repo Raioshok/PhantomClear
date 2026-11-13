@@ -255,6 +255,14 @@ class ApiClient {
   toggleScheduledJob(id: string, active: boolean) { return this.patch<any>(`/tools/scheduler/jobs/${id}`, { active }) }
   deleteScheduledJob(id: string) { return this.del<any>(`/tools/scheduler/jobs/${id}`) }
   runScheduledJobNow(id: string) { return this.post<any>(`/tools/scheduler/jobs/${id}/run`, {}) }
+
+  // Giveaway Joiner & Auto-Reactor
+  getGiveawayConfig() { return this.get<any>('/tools/giveaways/config') }
+  updateGiveawayConfig(data: any) { return this.post<any>('/tools/giveaways/config', data) }
+  getGiveawayLogs() { return this.get<any[]>('/tools/giveaways/logs') }
+  getGiveawayRules() { return this.get<any[]>('/tools/giveaways/rules') }
+  createGiveawayRule(data: any) { return this.post<any>('/tools/giveaways/rules', data) }
+  deleteGiveawayRule(id: string) { return this.del<any>(`/tools/giveaways/rules/${id}`) }
 }
 
 export const api = new ApiClient()

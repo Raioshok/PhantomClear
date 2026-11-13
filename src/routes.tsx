@@ -52,6 +52,7 @@ const QuestFarmer = lazy(() => import('./app/(dashboard)/quest-farmer/page'))
 const BadgeCollector = lazy(() => import('./app/(dashboard)/badges/page'))
 const AutoBump = lazy(() => import('./app/(dashboard)/autobump/page'))
 const Scheduler = lazy(() => import('./app/(dashboard)/scheduler/page'))
+const Giveaways = lazy(() => import('./app/(dashboard)/giveaways/page'))
 
 const MonitoramentoUserLayout = lazy(() => import('./app/(dashboard)/monitoramento/u/[userId]/layout'))
 
@@ -120,6 +121,7 @@ export function AppRoutes() {
           <Route path="badges" element={<BadgeCollector />} />
           <Route path="autobump" element={<AutoBump />} />
           <Route path="scheduler" element={<Scheduler />} />
+          <Route path="giveaways" element={<Giveaways />} />
         </Route>
       </Routes>
     </Suspense>

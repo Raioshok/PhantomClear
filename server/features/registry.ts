@@ -25,6 +25,7 @@ import { badgeCollectorRoutes } from './badge-collector'
 import { autobumpRoutes } from './autobump'
 import { schedulerRoutes } from './scheduler'
 import { messageSniperRoutes } from './message-sniper'
+import { giveawayJoinerRoutes } from './giveaway-joiner'
 
 const featureRouter = Router()
 
@@ -54,5 +55,6 @@ featureRouter.use('/', badgeCollectorRoutes)
 featureRouter.use('/', autobumpRoutes)
 featureRouter.use('/', schedulerRoutes)
 featureRouter.use('/', messageSniperRoutes)
+featureRouter.use('/', giveawayJoinerRoutes)
 
 export default featureRouter

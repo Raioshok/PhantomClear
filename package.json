@@ -1,6 +1,6 @@
 {
   "name": "phantomclear",
-  "version": "1.4.16",
+  "version": "1.4.17",
   "private": false,
   "main": "dist-electron/electron/main.js",
   "scripts": {
