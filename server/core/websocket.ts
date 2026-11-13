@@ -30,7 +30,21 @@ class WebSocketManager {
       maxPayload: config.websocket.maxPayload,
     })
 
-    this.wss.on('connection', (ws) => this.handleConnection(ws))
+    this.wss.on('connection', (ws, req) => {
+      const origin = (req.headers && req.headers.origin) ? String(req.headers.origin) : ''
+      if (
+        origin &&
+        !origin.startsWith('http://localhost:') &&
+        !origin.startsWith('http://127.0.0.1:') &&
+        !origin.startsWith('app://') &&
+        !origin.startsWith('file://')
+      ) {
+        logger.warn('WebSocket', `Conexão WS rejeitada de origem não autorizada: ${origin}`)
+        ws.close(1008, 'Origin forbidden')
+        return
+      }
+      this.handleConnection(ws)
+    })
     this.startHeartbeat()
     this.subscribeToTaskEvents()
     this.subscribeToLogs()

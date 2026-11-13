@@ -25,7 +25,24 @@ export function createApiServer() {
 
   const app = express()
 
-  app.use(cors({ origin: '*' }))
+  app.use(
+    cors({
+      origin: (origin, callback) => {
+        if (
+          !origin ||
+          origin.startsWith('http://localhost:') ||
+          origin.startsWith('http://127.0.0.1:') ||
+          origin.startsWith('app://') ||
+          origin.startsWith('file://')
+        ) {
+          callback(null, true)
+        } else {
+          callback(new Error('Cross-Origin Forbidden by PhantomClear Shield'))
+        }
+      },
+      credentials: true,
+    })
+  )
   app.use(express.json({ limit: '10mb' }))
   app.use(loggerMiddleware)
 

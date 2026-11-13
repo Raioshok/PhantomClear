@@ -34,4 +34,20 @@ router.post('/badge-collector/farm-variety', asyncHandler(async (_req, res) => {
   res.status(202).json({ success: true, data: result })
 }))
 
+router.patch('/badge-collector/connection', validate(z.object({
+  type: z.string(),
+  id: z.string(),
+  visible: z.boolean(),
+})), asyncHandler(async (req, res) => {
+  await badgeCollector.setConnectionVisibility(req.body.type, req.body.id, req.body.visible)
+  res.json({ success: true })
+}))
+
+router.patch('/badge-collector/clan', validate(z.object({
+  guildId: z.string().nullable(),
+})), asyncHandler(async (req, res) => {
+  await badgeCollector.setGuildClanTag(req.body.guildId)
+  res.json({ success: true })
+}))
+
 export const badgeCollectorRoutes = router

@@ -240,6 +240,8 @@ class ApiClient {
   leaveHypeSquad() { return this.del<{ success: boolean }>('/tools/badge-collector/hypesquad') }
   farmPlaytime(hours: number, gameId?: string) { return this.post<{ taskId: string }>('/tools/badge-collector/farm-playtime', { hours, gameId }) }
   farmVariety() { return this.post<{ taskId: string }>('/tools/badge-collector/farm-variety', {}) }
+  updateConnectionVisibility(type: string, id: string, visible: boolean) { return this.patch<{ success: boolean }>('/tools/badge-collector/connection', { type, id, visible }) }
+  setGuildClan(guildId: string | null) { return this.patch<{ success: boolean }>('/tools/badge-collector/clan', { guildId }) }
 }
 
 export const api = new ApiClient()

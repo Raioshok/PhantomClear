@@ -275,6 +275,7 @@ class BadgeCollectorService {
       totalAvailableCount: badges.length,
       badges,
       connections: connections.map((c) => ({
+        id: c.id,
         type: c.type,
         name: c.name,
         verified: Boolean(c.verified),
@@ -314,6 +315,43 @@ class BadgeCollectorService {
       return true
     } catch (err: any) {
       logger.error('BadgeCollector', `Erro ao sair da HypeSquad: ${err.message}`)
+      throw err
+    }
+  }
+
+  async setConnectionVisibility(connectionType: string, connectionId: string, visible: boolean): Promise<boolean> {
+    const token = this.getAuthToken()
+    try {
+      await this.requestApi(`/users/@me/connections/${connectionType}/${connectionId}`, token, {
+        method: 'PATCH',
+        apiVersion: 'v9',
+        body: { visibility: visible ? 1 : 0, show_activity: visible },
+      })
+      logger.success('BadgeCollector', `Visibilidade da conexão ${connectionType} alterada para: ${visible}`)
+      broadcastWSEvent('badge-collector:updated', {})
+      return true
+    } catch (err: any) {
+      logger.error('BadgeCollector', `Erro ao alterar conexão: ${err.message}`)
+      throw err
+    }
+  }
+
+  async setGuildClanTag(guildId: string | null): Promise<boolean> {
+    const token = this.getAuthToken()
+    try {
+      await this.requestApi('/users/@me/clan', token, {
+        method: 'PATCH',
+        apiVersion: 'v9',
+        body: {
+          identity_guild_id: guildId || null,
+          identity_enabled: Boolean(guildId),
+        },
+      })
+      logger.success('BadgeCollector', `Tag de guilda atualizada: ${guildId || 'removida'}`)
+      broadcastWSEvent('badge-collector:updated', {})
+      return true
+    } catch (err: any) {
+      logger.error('BadgeCollector', `Erro ao definir tag de guilda: ${err.message}`)
       throw err
     }
   }

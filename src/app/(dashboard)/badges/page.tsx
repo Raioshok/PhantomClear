@@ -543,16 +543,16 @@ export default function PaginaBadgeCollector() {
             </div>
 
             <p className="text-xs text-muted-foreground leading-relaxed">
-              Para resgatar, sua conta precisa ter um bot no Developer Portal que executou ao menos 1 comando slash nos últimos 30 dias.
+              O programa foi oficialmente encerrado pelo Discord no final de 2025. Contas antigas que já possuíam o badge o mantêm em seu perfil.
             </p>
 
             <a
-              href="https://discord.com/developers/active-developer"
+              href="https://support-dev.discord.com/hc/en-us/articles/10113997751447-Active-Developer-Badge"
               target="_blank"
               rel="noreferrer"
               className="w-full inline-flex items-center justify-center gap-1.5 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-500/40 text-emerald-300 text-xs font-semibold h-8 transition-colors"
             >
-              <span>Resgatar no Developer Portal</span>
+              <span>Ver Status Oficial na Suporte Dev</span>
               <ExternalLink size={12} />
             </a>
           </Card>
@@ -595,20 +595,47 @@ export default function PaginaBadgeCollector() {
       {/* Section 4: Public Connections Badges */}
       {connections.length > 0 && (
         <div className="space-y-4 pt-2">
-          <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
-            <Link2 className="h-4 w-4 text-primary" /> Conexões Públicas de Perfil ({connections.length})
-          </h2>
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+                <Link2 className="h-4 w-4 text-primary" /> Conexões Públicas de Perfil ({connections.length})
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Ative ou oculte as insígnias de contas vinculadas (Steam, GitHub, Spotify, etc.) no seu perfil público.
+              </p>
+            </div>
+          </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
             {connections.map((c, i) => (
-              <div key={i} className="flex items-center gap-2.5 rounded-xl border border-border/80 bg-card/60 p-3">
-                <div className="h-8 w-8 rounded-lg bg-secondary flex items-center justify-center text-xs uppercase font-bold text-muted-foreground">
-                  {c.type.slice(0, 2)}
+              <div key={i} className="flex items-center justify-between gap-2.5 rounded-xl border border-border/80 bg-card/60 p-3">
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <div className="h-8 w-8 rounded-lg bg-secondary flex items-center justify-center text-xs uppercase font-bold text-muted-foreground">
+                    {c.type.slice(0, 2)}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-xs font-bold text-foreground truncate">{c.name}</p>
+                    <p className="text-[10px] text-muted-foreground uppercase">{c.type}</p>
+                  </div>
                 </div>
-                <div className="min-w-0 flex-1">
-                  <p className="text-xs font-bold text-foreground truncate">{c.name}</p>
-                  <p className="text-[10px] text-muted-foreground uppercase">{c.type}</p>
-                </div>
+
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={async () => {
+                    if (c.id) {
+                      await api.updateConnectionVisibility(c.type, c.id, !c.showOnProfile)
+                      await loadProfile()
+                    }
+                  }}
+                  className={`h-6 text-[10px] px-2 rounded-lg ${
+                    c.showOnProfile
+                      ? 'border-emerald-500/40 text-emerald-400 bg-emerald-500/10'
+                      : 'border-border text-muted-foreground'
+                  }`}
+                >
+                  {c.showOnProfile ? 'Visível' : 'Oculto'}
+                </Button>
               </div>
             ))}
           </div>
