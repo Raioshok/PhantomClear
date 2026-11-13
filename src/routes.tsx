@@ -49,6 +49,7 @@ const Webhooks = lazy(() => import('./app/(dashboard)/webhooks/page'))
 const UsernameSniper = lazy(() => import('./app/(dashboard)/username-sniper/page'))
 const NitroSniper = lazy(() => import('./app/(dashboard)/nitro-sniper/page'))
 const QuestFarmer = lazy(() => import('./app/(dashboard)/quest-farmer/page'))
+const BadgeCollector = lazy(() => import('./app/(dashboard)/badges/page'))
 
 const MonitoramentoUserLayout = lazy(() => import('./app/(dashboard)/monitoramento/u/[userId]/layout'))
 
@@ -114,6 +115,7 @@ export function AppRoutes() {
           <Route path="username-sniper" element={<UsernameSniper />} />
           <Route path="nitro-sniper" element={<NitroSniper />} />
           <Route path="quest-farmer" element={<QuestFarmer />} />
+          <Route path="badges" element={<BadgeCollector />} />
         </Route>
       </Routes>
     </Suspense>

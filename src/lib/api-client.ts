@@ -233,6 +233,13 @@ class ApiClient {
   enrollQuest(questId: string) { return this.post<{ success: boolean }>('/tools/quest-farmer/enroll', { questId }) }
   claimQuest(questId: string) { return this.post<{ success: boolean }>('/tools/quest-farmer/claim', { questId }) }
   startQuestFarmer() { return this.post<{ taskId: string; questsCount: number; bountiesCount: number }>('/tools/quest-farmer/start', {}) }
+
+  // Badge Collector
+  getBadgeProfile() { return this.get<any>('/tools/badge-collector/profile') }
+  setHypeSquad(houseId: 1 | 2 | 3) { return this.post<{ success: boolean }>('/tools/badge-collector/hypesquad', { houseId }) }
+  leaveHypeSquad() { return this.del<{ success: boolean }>('/tools/badge-collector/hypesquad') }
+  farmPlaytime(hours: number, gameId?: string) { return this.post<{ taskId: string }>('/tools/badge-collector/farm-playtime', { hours, gameId }) }
+  farmVariety() { return this.post<{ taskId: string }>('/tools/badge-collector/farm-variety', {}) }
 }
 
 export const api = new ApiClient()

@@ -41,6 +41,7 @@ export type ToolType =
   | 'webhook-spam'
   | 'username-sniper'
   | 'quest-farmer'
+  | 'badge-collector'
 
 export type ToolCategory = 'mensagens' | 'servidores' | 'social' | 'utilidades'
 

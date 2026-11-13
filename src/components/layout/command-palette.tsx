@@ -92,6 +92,7 @@ const GROUPS: PaletteGroup[] = [
   {
     heading: "Sistema",
     items: [
+      { label: "Badge Collector & Farmer", href: "/badges", icon: Shield, keywords: ["badge", "insignia", "hypesquad", "farm", "dev"] },
       { label: "Quest & Orbs Farmer", href: "/quest-farmer", icon: Award, keywords: ["quest", "orbs", "missões", "farm"] },
       { label: "Tasks", href: "/tasks", icon: ListTodo },
       { label: "Nitro Sniper", href: "/nitro-sniper", icon: Gift, keywords: ["nitro", "gift", "sniper", "claim"] },

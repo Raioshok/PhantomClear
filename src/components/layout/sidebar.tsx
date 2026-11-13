@@ -138,6 +138,7 @@ const secoesMenu: SecaoMenu[] = [
     icone: <Sparkles size={16} />,
     defaultOpen: true,
     itens: [
+      { titulo: "Badge Collector", icone: <Shield size={16} />, href: "/badges" },
       { titulo: "Quest & Orbs Farmer", icone: <Award size={16} />, href: "/quest-farmer" },
       { titulo: "Username Sniper", icone: <Crosshair size={16} />, href: "/username-sniper" },
       { titulo: "Nitro Sniper", icone: <Gift size={16} />, href: "/nitro-sniper" },

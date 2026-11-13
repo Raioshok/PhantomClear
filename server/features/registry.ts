@@ -21,6 +21,7 @@ import { autoResponderRoutes } from './auto-responder'
 import { webhooksRoutes } from './webhooks'
 import { usernameSniperRoutes } from './username-sniper'
 import { questFarmerRoutes } from './quest-farmer'
+import { badgeCollectorRoutes } from './badge-collector'
 
 const featureRouter = Router()
 
@@ -46,5 +47,6 @@ featureRouter.use('/', autoResponderRoutes)
 featureRouter.use('/', webhooksRoutes)
 featureRouter.use('/', usernameSniperRoutes)
 featureRouter.use('/', questFarmerRoutes)
+featureRouter.use('/', badgeCollectorRoutes)
 
 export default featureRouter
