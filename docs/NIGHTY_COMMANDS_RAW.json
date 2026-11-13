@@ -1,0 +1,3141 @@
+[
+  {
+    "name": "contextmenu",
+    "description": "Context Menu",
+    "options": [
+      {
+        "name": "mode",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Add",
+          "Remove",
+          "Show"
+        ]
+      },
+      {
+        "name": "feature",
+        "description": "…",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "help",
+    "description": "Help",
+    "options": [
+      {
+        "name": "category",
+        "description": "Category",
+        "required": false,
+        "choices": [
+          "Administration",
+          "Animated messages",
+          "Funny commands",
+          "Images",
+          "Miscellaneous",
+          "Backups & restores",
+          "User Profile",
+          "Settings",
+          "Spotify",
+          "Text based commands",
+          "General tools",
+          "Trolling commands",
+          "Utility"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/admin kick",
+    "description": "Kick member from the server",
+    "options": [
+      {
+        "name": "member",
+        "description": "The member to kick",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "reason",
+        "description": "Reason for kick",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/admin ban",
+    "description": "Ban member from the server",
+    "options": [
+      {
+        "name": "member",
+        "description": "The member to ban",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "reason",
+        "description": "Reason for ban",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/admin softban",
+    "description": "Ban & unban member in order to delete all their messages",
+    "options": [
+      {
+        "name": "member",
+        "description": "The member to softban",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "reason",
+        "description": "Reason for softban",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/admin hackban",
+    "description": "Ban a user that is not in the server (using their id)",
+    "options": [
+      {
+        "name": "user_id",
+        "description": "The user id to ban",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "reason",
+        "description": "Reason for ban",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/admin unban",
+    "description": "Unban member from the server",
+    "options": [
+      {
+        "name": "user",
+        "description": "The user to unban",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "reason",
+        "description": "Reason for unban",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/admin bans",
+    "description": "Show banned users from the server",
+    "options": []
+  },
+  {
+    "name": "/admin timeout",
+    "description": "Timeout member",
+    "options": [
+      {
+        "name": "member",
+        "description": "The member to timeout",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "minutes",
+        "description": "Duration in minutes",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "reason",
+        "description": "Reason for timeout",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/admin removetimeout",
+    "description": "Remove timeout from member",
+    "options": [
+      {
+        "name": "member",
+        "description": "The member to remove the timeout from",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "reason",
+        "description": "Reason for timeout",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/admin purge",
+    "description": "Delete chat messages",
+    "options": [
+      {
+        "name": "amount",
+        "description": "The amount of messages to delete",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "user",
+        "description": "Only delete messages from this user",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "keyword",
+        "description": "Only delete messages containing this keyword",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "until",
+        "description": "Delete all messages until this message id",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/admin slowmode",
+    "description": "Set slowmode",
+    "options": [
+      {
+        "name": "seconds",
+        "description": "Slowmode delay",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/admin nuke",
+    "description": "Clone & delete channel in order to clean the chat",
+    "options": []
+  },
+  {
+    "name": "/admin addallroles",
+    "description": "Add all roles to member",
+    "options": [
+      {
+        "name": "member",
+        "description": "The member to add all roles",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/admin removeallroles",
+    "description": "Remove all roles from member",
+    "options": [
+      {
+        "name": "member",
+        "description": "The member to remove all roles from",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/admin createchannel",
+    "description": "Create a new channel",
+    "options": [
+      {
+        "name": "channel_type",
+        "description": "Channel type",
+        "required": true,
+        "choices": [
+          "Voice",
+          "Text",
+          "Category"
+        ]
+      },
+      {
+        "name": "name",
+        "description": "Name of the channel",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "reason",
+        "description": "Reason for channel",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/animated 100",
+    "description": "Count from 0 to 100",
+    "options": []
+  },
+  {
+    "name": "/animated abc",
+    "description": "The alphabet in a message",
+    "options": []
+  },
+  {
+    "name": "/animated bomb",
+    "description": "Animated bomb message",
+    "options": []
+  },
+  {
+    "name": "/animated fuckyou",
+    "description": "Animated fuck you message",
+    "options": []
+  },
+  {
+    "name": "/animated readrules",
+    "description": "Read the fucking rules!",
+    "options": [
+      {
+        "name": "user",
+        "description": "User who needs to read the rules",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/animated virus",
+    "description": "Injecting virus ...",
+    "options": [
+      {
+        "name": "virus_type",
+        "description": "Virus type",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/animated warning",
+    "description": "Warning, System overload",
+    "options": []
+  },
+  {
+    "name": "/fun random",
+    "description": "Random commands",
+    "options": []
+  },
+  {
+    "name": "/fun 8ball",
+    "description": "Get an answer to your question",
+    "options": [
+      {
+        "name": "question",
+        "description": "Question to ask",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/fun deathdate",
+    "description": "Predicted death date",
+    "options": [
+      {
+        "name": "user",
+        "description": "User to predict",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/fun dick",
+    "description": "Dick size measurement",
+    "options": [
+      {
+        "name": "user",
+        "description": "User to measure",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/fun gay",
+    "description": "How gay",
+    "options": [
+      {
+        "name": "user",
+        "description": "User to check",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/fun insult",
+    "description": "Insult a user",
+    "options": [
+      {
+        "name": "user",
+        "description": "User to insult",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/fun iq",
+    "description": "IQ test",
+    "options": [
+      {
+        "name": "user",
+        "description": "User to test",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/fun triggertyping",
+    "description": "Show your self typing in the chat",
+    "options": [
+      {
+        "name": "delay_seconds",
+        "description": "Delay of typing (in seconds)",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "channel_id",
+        "description": "The id of the channel you want to show your self typing in",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/fun emojireact",
+    "description": "React on the latest message with emojis",
+    "options": [
+      {
+        "name": "text",
+        "description": "Text to react with (into emojis)",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "channel_id",
+        "description": "…",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/fun mreact",
+    "description": "React on messages in the channel",
+    "options": [
+      {
+        "name": "emoji",
+        "description": "Emoji to react with",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "amount",
+        "description": "Amount of messages to react on",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/fun spamreact",
+    "description": "Spam reactions on last message",
+    "options": [
+      {
+        "name": "emojis",
+        "description": "Emojis to react with",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/fun tts",
+    "description": "Text to speech message",
+    "options": [
+      {
+        "name": "text",
+        "description": "Text to convert into speech",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/fun cycle",
+    "description": "Cycle channel, role, or nick name",
+    "options": [
+      {
+        "name": "cycle_type",
+        "description": "Channel, role or member",
+        "required": true,
+        "choices": [
+          "channel",
+          "role",
+          "nick"
+        ]
+      },
+      {
+        "name": "text",
+        "description": "…",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "channel",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "role",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "member",
+        "description": "…",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/fun feed",
+    "description": "Feed user",
+    "options": [
+      {
+        "name": "user",
+        "description": "User to feed",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/fun hug",
+    "description": "Hug user",
+    "options": [
+      {
+        "name": "user",
+        "description": "User to hug",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/fun kiss",
+    "description": "Kiss user",
+    "options": [
+      {
+        "name": "user",
+        "description": "User to kiss",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/fun pat",
+    "description": "Pat user",
+    "options": [
+      {
+        "name": "user",
+        "description": "User to pat",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/fun slap",
+    "description": "Slap user",
+    "options": [
+      {
+        "name": "user",
+        "description": "User to slap",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/fun wink",
+    "description": "Wink user",
+    "options": [
+      {
+        "name": "user",
+        "description": "User to wink at",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/fun respect",
+    "description": "Respect user",
+    "options": [
+      {
+        "name": "user",
+        "description": "User to pay respect",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/random number",
+    "description": "Choose a random number",
+    "options": [
+      {
+        "name": "min",
+        "description": "Minimum number",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "max",
+        "description": "Maximum number",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/random advice",
+    "description": "Get advice",
+    "options": []
+  },
+  {
+    "name": "/random animalfact",
+    "description": "Get a random animal fact",
+    "options": [
+      {
+        "name": "animal",
+        "description": "Dog or cat",
+        "required": true,
+        "choices": [
+          "Dog",
+          "Cat"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/random coinflip",
+    "description": "Flip a coin",
+    "options": []
+  },
+  {
+    "name": "/random joke",
+    "description": "Random joke",
+    "options": []
+  },
+  {
+    "name": "/random question",
+    "description": "Get a random question",
+    "options": []
+  },
+  {
+    "name": "/random kanye",
+    "description": "Kanye quote",
+    "options": []
+  },
+  {
+    "name": "/random dice",
+    "description": "Roll a dice",
+    "options": []
+  },
+  {
+    "name": "/random rps",
+    "description": "Rock, paper & scissors",
+    "options": []
+  },
+  {
+    "name": "/image animal",
+    "description": "Animal images",
+    "options": [
+      {
+        "name": "animal",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Bird",
+          "Bunny",
+          "Cat",
+          "Dog",
+          "Duck",
+          "Fox",
+          "Kangaroo",
+          "Koala",
+          "Panda",
+          "Red panda",
+          "Racoon",
+          "Whale"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/image meme",
+    "description": "Generate memes",
+    "options": [
+      {
+        "name": "meme",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Yall got any more of that ..",
+          "Change my mind",
+          "Fake Discord Clyde message",
+          "Written on facts book",
+          "Kannagen",
+          "Did you mean? (Google search)",
+          "Drake no, Drake yes",
+          "Good guy (Putin)",
+          "Putin speaking",
+          "Futurama sus",
+          "Think about it",
+          "Yakuza speaking",
+          "Yao Ming's bitch please",
+          "Random meme (Reddit)"
+        ]
+      },
+      {
+        "name": "text",
+        "description": "Text",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "text_2",
+        "description": "Second text",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/image overlay",
+    "description": "Put an overlay on user avatars",
+    "options": [
+      {
+        "name": "overlay",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Heart",
+          "Horny card",
+          "Jail",
+          "Lolicon police",
+          "Pride colors",
+          "Simp card",
+          "Soviet comrade",
+          "Trash",
+          "Triggered",
+          "GTAV wasted"
+        ]
+      },
+      {
+        "name": "user",
+        "description": "User",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "user_2",
+        "description": "Second user (if needed)",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/image search",
+    "description": "Search image",
+    "options": [
+      {
+        "name": "query",
+        "description": "Your search",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/image user",
+    "description": "Get user asset",
+    "options": [
+      {
+        "name": "asset",
+        "description": "User asset",
+        "required": true,
+        "choices": [
+          "Avatar",
+          "Banner",
+          "Avatar decoration"
+        ]
+      },
+      {
+        "name": "user",
+        "description": "User",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/image server",
+    "description": "Get server asset",
+    "options": [
+      {
+        "name": "asset",
+        "description": "Server asset",
+        "required": true,
+        "choices": [
+          "Icon",
+          "Banner",
+          "Splash",
+          "Discovery splash"
+        ]
+      },
+      {
+        "name": "server_id",
+        "description": "Server ID",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/image phcomment",
+    "description": "Pornhub comment",
+    "options": [
+      {
+        "name": "user",
+        "description": "User",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "comment",
+        "description": "Comment to fake",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/image pikachu",
+    "description": "Pikachu",
+    "options": []
+  },
+  {
+    "name": "/image pornhub",
+    "description": "Fake Pornhub logo",
+    "options": [
+      {
+        "name": "text",
+        "description": "First part",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "text_2",
+        "description": "Second part",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/image nsfw",
+    "description": "NSFW commands",
+    "options": []
+  },
+  {
+    "name": "/misc createcommand",
+    "description": "Create (basic) custom command",
+    "options": [
+      {
+        "name": "name",
+        "description": "Name of the command",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "reply",
+        "description": "Message to send upon invoking the command",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/misc credits",
+    "description": "Credits",
+    "options": []
+  },
+  {
+    "name": "/misc dmlogger",
+    "description": "Toggle DM logger",
+    "options": [
+      {
+        "name": "toggle",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "On",
+          "Off",
+          "Group (on)"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/misc muteallservers",
+    "description": "Mute all servers",
+    "options": []
+  },
+  {
+    "name": "/misc private",
+    "description": "Make command outputs visible only to you.",
+    "options": [
+      {
+        "name": "toggle",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "On",
+          "Off"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/misc forward",
+    "description": "Forward outputs from the app.",
+    "options": [
+      {
+        "name": "toggle",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "On",
+          "Off"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/misc folder",
+    "description": "Open Nighty folder",
+    "options": []
+  },
+  {
+    "name": "/misc nitrosniper",
+    "description": "Toggle nitro sniper",
+    "options": [
+      {
+        "name": "toggle",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "On",
+          "Off"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/misc gjoiner",
+    "description": "Giveaway joiner",
+    "options": [
+      {
+        "name": "toggle",
+        "description": "Toggle giveaway joiner",
+        "required": false,
+        "choices": [
+          "On",
+          "Off"
+        ]
+      },
+      {
+        "name": "delay",
+        "description": "Delay (in seconds) before joining a giveaway",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/misc keywordnotifier",
+    "description": "Keyword notifier",
+    "options": [
+      {
+        "name": "mode",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Show",
+          "Add",
+          "Remove"
+        ]
+      },
+      {
+        "name": "keyword",
+        "description": "…",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/misc whatsmykey",
+    "description": "Check your license key",
+    "options": []
+  },
+  {
+    "name": "/misc reloadscripts",
+    "description": "Reload all scripts",
+    "options": []
+  },
+  {
+    "name": "/misc togglescript",
+    "description": "Enable or disable a script",
+    "options": [
+      {
+        "name": "toggle",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "On",
+          "Off"
+        ]
+      },
+      {
+        "name": "script",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/misc deletescript",
+    "description": "Delete a script",
+    "options": [
+      {
+        "name": "script",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/misc customcommands",
+    "description": "Custom commands",
+    "options": []
+  },
+  {
+    "name": "/misc restart",
+    "description": "Restart Nighty",
+    "options": []
+  },
+  {
+    "name": "/misc shutdown",
+    "description": "Exit Nighty",
+    "options": []
+  },
+  {
+    "name": "/misc riskmode",
+    "description": "Toggle risk mode",
+    "options": [
+      {
+        "name": "toggle",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "On",
+          "Off"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/misc stop",
+    "description": "Abort running commands",
+    "options": []
+  },
+  {
+    "name": "/misc forceprivate",
+    "description": "Force a command to be executed privately.",
+    "options": [
+      {
+        "name": "mode",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Add",
+          "Remove"
+        ]
+      },
+      {
+        "name": "command",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/misc uptime",
+    "description": "Selfbot uptime",
+    "options": []
+  },
+  {
+    "name": "/misc history",
+    "description": "Command history",
+    "options": [
+      {
+        "name": "clear",
+        "description": "…",
+        "required": false,
+        "choices": [
+          "Yes",
+          "No"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/misc commandsort",
+    "description": "Command sorting",
+    "options": [
+      {
+        "name": "sorting",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Default",
+          "Alphabetic",
+          "History"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/recovery dailybackup",
+    "description": "Create a backup every 24 hours.",
+    "options": [
+      {
+        "name": "toggle",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "On",
+          "Off"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/recovery backup",
+    "description": "Create backup",
+    "options": [
+      {
+        "name": "backup_type",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Full",
+          "Account information",
+          "Account settings",
+          "Frecency Settings (Favorite GIFs, ..)",
+          "Friends",
+          "Servers"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/recovery restore",
+    "description": "Restore from backup",
+    "options": [
+      {
+        "name": "restore_type",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Friends",
+          "Servers",
+          "Frecency settings (Favorite GIFs, ..)"
+        ]
+      },
+      {
+        "name": "account",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/userprofile toggle",
+    "description": "Toggle User Profile",
+    "options": [
+      {
+        "name": "toggle",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "On",
+          "Off"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/userprofile active",
+    "description": "Set active user profile",
+    "options": [
+      {
+        "name": "profile",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/settings notifications",
+    "description": "Event notifications",
+    "options": [
+      {
+        "name": "event_type",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Pings",
+          "Ghostpings",
+          "Giveaways",
+          "Friend updates",
+          "Role changes",
+          "Nickname changes",
+          "Server events (join/leave)",
+          "New sessions",
+          "Commands used",
+          "When connected"
+        ]
+      },
+      {
+        "name": "toggle",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "On",
+          "Off"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/settings dmnotifications",
+    "description": "DM notifications",
+    "options": [
+      {
+        "name": "event_type",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Pings",
+          "Ghostpings",
+          "Giveaways",
+          "Nitro sniper",
+          "Keyword notifier",
+          "DM logger",
+          "Friend updates",
+          "Role changes",
+          "Nickname changes",
+          "Server events (join/leave)",
+          "When connected"
+        ]
+      },
+      {
+        "name": "toggle",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "On",
+          "Off"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/settings toastnotifications",
+    "description": "Windows notifications",
+    "options": [
+      {
+        "name": "event_type",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "All",
+          "Pings",
+          "Ghostpings",
+          "Giveaways",
+          "DM Typing",
+          "Nitro sniper",
+          "Keyword notifier",
+          "Friend updates",
+          "Role changes",
+          "Nickname changes",
+          "Server events (join/leave)",
+          "When connected",
+          "When disconnected",
+          "Discoverables"
+        ]
+      },
+      {
+        "name": "toggle",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "On",
+          "Off"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/settings toastsettings",
+    "description": "Toast notification settings",
+    "options": [
+      {
+        "name": "side",
+        "description": "…",
+        "required": false,
+        "choices": [
+          "Left",
+          "Right"
+        ]
+      },
+      {
+        "name": "duration_ms",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "image_url",
+        "description": "…",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/settings soundnotifications",
+    "description": "Sound notifications",
+    "options": [
+      {
+        "name": "event_type",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "All",
+          "Pings",
+          "Ghostpings",
+          "Giveaways",
+          "DM Typing",
+          "Nitro sniper",
+          "Friend updates",
+          "Role changes",
+          "Nickname changes",
+          "Server events (join/leave)",
+          "When connected",
+          "When disconnected"
+        ]
+      },
+      {
+        "name": "toggle",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "On",
+          "Off"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/settings webhooknotifications",
+    "description": "Webhook notifications",
+    "options": [
+      {
+        "name": "event_type",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Pings",
+          "Ghostpings",
+          "Giveaways",
+          "Nitro sniper",
+          "Logs (keywords, dm logger, ..)",
+          "Friend updates",
+          "Role changes",
+          "Nickname changes",
+          "Server events (join/leave)",
+          "When connected",
+          "When disconnected"
+        ]
+      },
+      {
+        "name": "url",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/settings sessionspoof",
+    "description": "Spoof Nighty session",
+    "options": [
+      {
+        "name": "session",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Windows",
+          "Linux",
+          "iOS",
+          "Android",
+          "PS5"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/settings theme",
+    "description": "Theme management",
+    "options": [
+      {
+        "name": "theme_name",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "title",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "footer",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "image",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "author_icon",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "footer_icon",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "large_image",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "color",
+        "description": "…",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/settings themes",
+    "description": "Manage themes",
+    "options": [
+      {
+        "name": "method",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Select",
+          "Create",
+          "Delete",
+          "Current"
+        ]
+      },
+      {
+        "name": "theme_name",
+        "description": "…",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/settings webhookpings",
+    "description": "Toggle webhook pings",
+    "options": [
+      {
+        "name": "toggle",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "On",
+          "Off"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/settings webhookprofile",
+    "description": "Edit webhook profile",
+    "options": [
+      {
+        "name": "method",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Name",
+          "Avatar url"
+        ]
+      },
+      {
+        "name": "value",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/settings webhooksetup",
+    "description": "Setup webhook notifications server",
+    "options": [
+      {
+        "name": "server",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/settings prefix",
+    "description": "Change prefix for message commands",
+    "options": [
+      {
+        "name": "new_prefix",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/settings deletetimer",
+    "description": "Auto delete command outputs",
+    "options": [
+      {
+        "name": "seconds",
+        "description": "…",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/settings appedit",
+    "description": "Edit app profile",
+    "options": [
+      {
+        "name": "name",
+        "description": "New app name",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "avatar",
+        "description": "New app avatar url",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "banner",
+        "description": "New app banner url",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/text 1337",
+    "description": "1337 style message",
+    "options": [
+      {
+        "name": "text",
+        "description": "Text",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/text ascii",
+    "description": "Text to ASCII art",
+    "options": [
+      {
+        "name": "text",
+        "description": "Text",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/text zalgo",
+    "description": "Zalgo text",
+    "options": [
+      {
+        "name": "text",
+        "description": "Text",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/text italic",
+    "description": "Italic text",
+    "options": [
+      {
+        "name": "text",
+        "description": "Text",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/text upsidedown",
+    "description": "Text upside down",
+    "options": [
+      {
+        "name": "text",
+        "description": "Text",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/text morse",
+    "description": "Text to morse code",
+    "options": [
+      {
+        "name": "text",
+        "description": "Text",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/text owo",
+    "description": "Owoify text",
+    "options": [
+      {
+        "name": "text",
+        "description": "Text",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/text smart",
+    "description": "SmArT TaLkEr",
+    "options": [
+      {
+        "name": "text",
+        "description": "Text",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/text regional",
+    "description": "Text in emojis",
+    "options": [
+      {
+        "name": "text",
+        "description": "Text",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/text space",
+    "description": "Spaced message",
+    "options": [
+      {
+        "name": "text",
+        "description": "Text",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/text vape",
+    "description": "Vapored message",
+    "options": [
+      {
+        "name": "text",
+        "description": "Text",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/text spoiler",
+    "description": "Spoil every character",
+    "options": [
+      {
+        "name": "text",
+        "description": "Text",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/text reverse",
+    "description": "Reverse text",
+    "options": [
+      {
+        "name": "text",
+        "description": "Text",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/text hyperlink",
+    "description": "Add link to text",
+    "options": [
+      {
+        "name": "text",
+        "description": "Text",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "url",
+        "description": "Link",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/text semoji",
+    "description": "Emoji between each word",
+    "options": [
+      {
+        "name": "emoji",
+        "description": "…",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "text",
+        "description": "Text",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/text codeblock",
+    "description": "Text in codeblock",
+    "options": [
+      {
+        "name": "code",
+        "description": "Code markup",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "text",
+        "description": "Text",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/text hiddenping",
+    "description": "Hide ping in message",
+    "options": [
+      {
+        "name": "user",
+        "description": "User to ping",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "text",
+        "description": "Text",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/text hiddenlink",
+    "description": "Hide link in message",
+    "options": [
+      {
+        "name": "url",
+        "description": "Link to hide",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "text",
+        "description": "Text",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/text convert",
+    "description": "Convert text to binary, hex, base64, ..",
+    "options": [
+      {
+        "name": "conversion",
+        "description": "Conversion",
+        "required": true,
+        "choices": [
+          "Text to binary",
+          "Text to hexadecimal",
+          "Text to base64",
+          "Text to rot13",
+          "Binary to text",
+          "Hexadecimal to text",
+          "Base64 to text",
+          "Rot13 to text"
+        ]
+      },
+      {
+        "name": "value",
+        "description": "The value to convert",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/tools info",
+    "description": "Information commands",
+    "options": []
+  },
+  {
+    "name": "/tools generate",
+    "description": "Generate commands",
+    "options": []
+  },
+  {
+    "name": "/tools lookup",
+    "description": "Lookup commands",
+    "options": []
+  },
+  {
+    "name": "/tools dump",
+    "description": "Dump commands",
+    "options": []
+  },
+  {
+    "name": "/tools nickscan",
+    "description": "Show servers you have a nickname in",
+    "options": []
+  },
+  {
+    "name": "/tools revavatar",
+    "description": "Reverse user avatar",
+    "options": [
+      {
+        "name": "user",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/tools tinyurl",
+    "description": "URL shortener",
+    "options": [
+      {
+        "name": "url",
+        "description": "URL to shorten",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/tools snipe",
+    "description": "Retrieve deleted messages",
+    "options": [
+      {
+        "name": "amount",
+        "description": "Amount of deleted messages to show (up to 15)",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "channel",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "channel_id",
+        "description": "…",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/tools transfer",
+    "description": "Transfer emojis/stickers from one server to another",
+    "options": [
+      {
+        "name": "type",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Emojis",
+          "Stickers"
+        ]
+      },
+      {
+        "name": "transfer_from",
+        "description": "…",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "transfer_to",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/tools ping",
+    "description": "Discord latency",
+    "options": []
+  },
+  {
+    "name": "/tools friendinvite",
+    "description": "Generate a friend invite",
+    "options": []
+  },
+  {
+    "name": "/info user",
+    "description": "User information",
+    "options": [
+      {
+        "name": "user",
+        "description": "User",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "user_id",
+        "description": "…",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/info member",
+    "description": "Server member information",
+    "options": [
+      {
+        "name": "member",
+        "description": "Server member",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/info server",
+    "description": "Server information",
+    "options": [
+      {
+        "name": "server",
+        "description": "Server",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/info token",
+    "description": "Token information",
+    "options": [
+      {
+        "name": "token",
+        "description": "Account token",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/info role",
+    "description": "Server role information",
+    "options": [
+      {
+        "name": "role",
+        "description": "Server role",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/info channel",
+    "description": "Server channel information",
+    "options": [
+      {
+        "name": "channel",
+        "description": "Server channel",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "channel_id",
+        "description": "…",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/info webhook",
+    "description": "Webhook information",
+    "options": [
+      {
+        "name": "webhook_url",
+        "description": "Webhook url",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/info sticker",
+    "description": "Sticker information",
+    "options": [
+      {
+        "name": "sticker_name",
+        "description": "Sticker name",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/info emoji",
+    "description": "Emoji information",
+    "options": [
+      {
+        "name": "emoji_name",
+        "description": "Emoji name",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "server_id",
+        "description": "…",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/info invite",
+    "description": "Invite information",
+    "options": [
+      {
+        "name": "invite",
+        "description": "Invite url or code",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/generate nitro",
+    "description": "Generate fake nitro",
+    "options": [
+      {
+        "name": "amount",
+        "description": "Amount of fake nitro codes",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/generate token",
+    "description": "Generate fake discord token",
+    "options": []
+  },
+  {
+    "name": "/generate password",
+    "description": "Generate password",
+    "options": [
+      {
+        "name": "length",
+        "description": "Amount of characters",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/generate user",
+    "description": "Generate fake user",
+    "options": []
+  },
+  {
+    "name": "/lookup weather",
+    "description": "Current weather",
+    "options": [
+      {
+        "name": "city",
+        "description": "City name",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/lookup crypto",
+    "description": "Crypto price",
+    "options": [
+      {
+        "name": "currency_code",
+        "description": "Currency code",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/lookup ip",
+    "description": "IP address lookup",
+    "options": [
+      {
+        "name": "address",
+        "description": "IP address",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/lookup urban",
+    "description": "Urban dictionary",
+    "options": [
+      {
+        "name": "term",
+        "description": "Search term",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/lookup google",
+    "description": "Google search",
+    "options": [
+      {
+        "name": "search",
+        "description": "Search query",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/lookup youtube",
+    "description": "YouTube search",
+    "options": [
+      {
+        "name": "search",
+        "description": "Search video",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/lookup song",
+    "description": "Song lookup",
+    "options": [
+      {
+        "name": "search",
+        "description": "Search query",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/lookup mcserver",
+    "description": "Minecraft server lookup",
+    "options": [
+      {
+        "name": "address",
+        "description": "Server address",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/lookup server",
+    "description": "Lookup server roles or channels",
+    "options": [
+      {
+        "name": "lookup_type",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Roles",
+          "Channels"
+        ]
+      },
+      {
+        "name": "server",
+        "description": "…",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/dump attachments",
+    "description": "Dump attachments from message",
+    "options": [
+      {
+        "name": "channel_id",
+        "description": "Channel ID",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "message_id",
+        "description": "Message ID",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/dump chat",
+    "description": "Dump chat to a .txt file",
+    "options": [
+      {
+        "name": "amount",
+        "description": "Amount of messages",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "channel",
+        "description": "Channel",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "channel_id",
+        "description": "…",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/dump emojis",
+    "description": "Dump emojis from server",
+    "options": [
+      {
+        "name": "server",
+        "description": "Server",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/dump stickers",
+    "description": "Dump stickers from server",
+    "options": [
+      {
+        "name": "server",
+        "description": "Server",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/troll force",
+    "description": "Force member nickname, kick, or disconnect",
+    "options": [
+      {
+        "name": "force_type",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Nickname",
+          "Kick",
+          "Voice disconnect"
+        ]
+      },
+      {
+        "name": "member",
+        "description": "…",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "nick",
+        "description": "Forced nickname",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/troll mimic",
+    "description": "Copy user messages in real time",
+    "options": [
+      {
+        "name": "mimic_type",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Standard",
+          "Smart (TaLk liKE tHiS)",
+          "Reply (Replies the user)",
+          "Regional (Emoji letters)"
+        ]
+      },
+      {
+        "name": "user",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/troll noleave",
+    "description": "Force user to stay in group (requires friendship)",
+    "options": [
+      {
+        "name": "user",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/troll spy",
+    "description": "Spy user",
+    "options": [
+      {
+        "name": "user",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/troll empty",
+    "description": "Send empty message",
+    "options": []
+  },
+  {
+    "name": "/troll fakenitro",
+    "description": "Fake nitro troll (requires embed links permission)",
+    "options": []
+  },
+  {
+    "name": "/troll purgehack",
+    "description": "Flood chat with invisible message",
+    "options": []
+  },
+  {
+    "name": "/troll voicemove",
+    "description": "Move around voice channels in the server",
+    "options": [
+      {
+        "name": "amount",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/troll resend",
+    "description": "Send every message the user deletes or edits",
+    "options": [
+      {
+        "name": "send_type",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Deleted messages",
+          "Edited messages"
+        ]
+      },
+      {
+        "name": "user",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/troll reactuser",
+    "description": "React to every message the user sends",
+    "options": [
+      {
+        "name": "user",
+        "description": "…",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "emoji",
+        "description": "…",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/troll deleteannoy",
+    "description": "Delete every message the user sends",
+    "options": [
+      {
+        "name": "user",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/troll unreact",
+    "description": "Delete every reaction the user makes",
+    "options": [
+      {
+        "name": "user",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/troll ghostping",
+    "description": "Ghostping user",
+    "options": [
+      {
+        "name": "user",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/utils clean",
+    "description": "Delete your messages",
+    "options": [
+      {
+        "name": "amount",
+        "description": "Amount of messages to delete",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "channel",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "channel_id",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "until",
+        "description": "Delete messages until this message ID",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "keyword",
+        "description": "Only delete messages containing this keyword",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/utils schedule",
+    "description": "Schedule message",
+    "options": [
+      {
+        "name": "time",
+        "description": "Time format example: 2d 5h",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "message",
+        "description": "Message to be scheduled",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/utils insights",
+    "description": "Analyze visit frequency and take action.",
+    "options": []
+  },
+  {
+    "name": "/utils favorites",
+    "description": "Manage your Discord Favorites",
+    "options": [
+      {
+        "name": "type",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "DMs & Text channels"
+        ]
+      },
+      {
+        "name": "method",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Add",
+          "Remove"
+        ]
+      },
+      {
+        "name": "target",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/utils sync",
+    "description": "Sync with user",
+    "options": [
+      {
+        "name": "what",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Presence"
+        ]
+      },
+      {
+        "name": "user",
+        "description": "User",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/utils hypesquad",
+    "description": "Change hypesquad house",
+    "options": [
+      {
+        "name": "house",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Bravery",
+          "Brilliance",
+          "Balance"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/utils cloneserver",
+    "description": "Create a clone of the server",
+    "options": [
+      {
+        "name": "clone_from",
+        "description": "…",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "clone_to",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/utils deletewebhook",
+    "description": "Delete webhook",
+    "options": [
+      {
+        "name": "url",
+        "description": "Webhook url",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/utils leaveallgroups",
+    "description": "Leave all your group chats",
+    "options": []
+  },
+  {
+    "name": "/utils firstmessage",
+    "description": "Get first message from channel",
+    "options": [
+      {
+        "name": "channel",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "channel_id",
+        "description": "…",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/utils translate",
+    "description": "Google Translate",
+    "options": [
+      {
+        "name": "text",
+        "description": "…",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "source",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "to",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "mode",
+        "description": "…",
+        "required": false,
+        "choices": [
+          "App/Bot",
+          "Regular message"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/utils autotranslate",
+    "description": "Auto translate your messages",
+    "options": [
+      {
+        "name": "toggle",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "On",
+          "Off"
+        ]
+      },
+      {
+        "name": "source",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "to",
+        "description": "…",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/utils autoslash",
+    "description": "Automatically execute slash commands",
+    "options": [
+      {
+        "name": "app_id",
+        "description": "…",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "command_name",
+        "description": "…",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "options",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "seconds",
+        "description": "…",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/insights servers",
+    "description": "Most/least visited servers.",
+    "options": [
+      {
+        "name": "type",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Most visited",
+          "Least visited",
+          "Inactive"
+        ]
+      },
+      {
+        "name": "action",
+        "description": "…",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/insights dms",
+    "description": "Most/least visited DMs.",
+    "options": [
+      {
+        "name": "type",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Most visited",
+          "Least visited"
+        ]
+      },
+      {
+        "name": "action",
+        "description": "…",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/nsfw ass",
+    "description": "Ass image (+18)",
+    "options": []
+  },
+  {
+    "name": "/nsfw boobs",
+    "description": "Boobs image (+18)",
+    "options": []
+  },
+  {
+    "name": "/nsfw pussy",
+    "description": "Pussy image (+18)",
+    "options": []
+  },
+  {
+    "name": "/nsfw hentai",
+    "description": "Hentai image (+18)",
+    "options": []
+  },
+  {
+    "name": "/nsfw pgif",
+    "description": "Porn gif",
+    "options": []
+  },
+  {
+    "name": "/spotify select",
+    "description": "Select Spotify account",
+    "options": [
+      {
+        "name": "account",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/spotify currentsong",
+    "description": "Show current playing song",
+    "options": [
+      {
+        "name": "url_only",
+        "description": "…",
+        "required": false,
+        "choices": [
+          "Yes",
+          "No"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/spotify search",
+    "description": "Search for a song (or play it)",
+    "options": [
+      {
+        "name": "song_name",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/spotify playback",
+    "description": "Manage playback state",
+    "options": [
+      {
+        "name": "state",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Pause",
+          "Play",
+          "Next",
+          "Previous"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/spotify playbackrepeat",
+    "description": "Manage playback repeat state",
+    "options": [
+      {
+        "name": "state",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Repeat track",
+          "Repeat context",
+          "Disable repeat"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/spotify playbackshuffle",
+    "description": "Manage playback shuffle state",
+    "options": [
+      {
+        "name": "state",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "On",
+          "Off"
+        ]
+      }
+    ]
+  },
+  {
+    "name": "/abuse kickeverywhere",
+    "description": "Kick user from every server you can",
+    "options": [
+      {
+        "name": "user",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/abuse baneverywhere",
+    "description": "Ban user from every server you can",
+    "options": [
+      {
+        "name": "user",
+        "description": "…",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/abuse timeouteverywhere",
+    "description": "Timeout user on every server you can",
+    "options": [
+      {
+        "name": "user",
+        "description": "…",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "duration",
+        "description": "Duration in minutes",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/abuse spam",
+    "description": "Spam messages",
+    "options": [
+      {
+        "name": "message",
+        "description": "…",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "amount",
+        "description": "Amount of messages",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "delay",
+        "description": "Delay in seconds",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/abuse transferbans",
+    "description": "Transfer bans from a server.",
+    "options": [
+      {
+        "name": "server",
+        "description": "Server to transfer bans from.",
+        "required": true,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/ai settings",
+    "description": "AI Settings",
+    "options": [
+      {
+        "name": "base_url",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "model",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "api_key",
+        "description": "…",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/ai ask",
+    "description": "Ask AI",
+    "options": [
+      {
+        "name": "question",
+        "description": "…",
+        "required": true,
+        "choices": []
+      },
+      {
+        "name": "edit_mode",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "m_id",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "btn",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "system",
+        "description": "…",
+        "required": false,
+        "choices": []
+      }
+    ]
+  },
+  {
+    "name": "/ai dm",
+    "description": "DM options",
+    "options": [
+      {
+        "name": "mode",
+        "description": "…",
+        "required": true,
+        "choices": [
+          "Auto reply"
+        ]
+      },
+      {
+        "name": "user",
+        "description": "…",
+        "required": false,
+        "choices": []
+      },
+      {
+        "name": "everyone",
+        "description": "…",
+        "required": false,
+        "choices": [
+          "Yes",
+          "No"
+        ]
+      },
+      {
+        "name": "ask_first",
+        "description": "Ask for confirmation before sending the message generated by AI",
+        "required": false,
+        "choices": [
+          "Yes",
+          "No"
+        ]
+      },
+      {
+        "name": "system",
+        "description": "Custom system message (requires auto reply mode)",
+        "required": false,
+        "choices": []
+      }
+    ]
+  }
+]

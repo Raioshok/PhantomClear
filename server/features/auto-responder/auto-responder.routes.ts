@@ -16,6 +16,7 @@ const configSchema = z.object({
   onlyDMs: z.boolean().optional(),
   cooldownMinutes: z.number().int().min(1).max(1440).optional(),
   nitroSnifferEnabled: z.boolean().optional(),
+  nitroWebhookUrl: z.string().optional(),
 })
 
 router.post('/auto-responder/config', validate(configSchema), asyncHandler(async (req, res) => {

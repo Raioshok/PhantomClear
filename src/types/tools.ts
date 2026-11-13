@@ -42,6 +42,8 @@ export type ToolType =
   | 'username-sniper'
   | 'quest-farmer'
   | 'badge-collector'
+  | 'autobump'
+  | 'scheduler'
 
 export type ToolCategory = 'mensagens' | 'servidores' | 'social' | 'utilidades'
 

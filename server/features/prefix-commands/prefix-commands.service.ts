@@ -4,6 +4,7 @@ import { sleep } from '../../utils/helpers'
 import { logger } from '../../core/logger'
 import { stats } from '../../services/stats.service'
 import type { PrefixCommandsConfig } from '../../../src/types/tools'
+import { resolveCommand } from './text-transforms.catalog'
 
 interface ComandosAtivos {
   cl: boolean
@@ -301,8 +302,24 @@ async function executarComando(client: any, comando: string, args: string[], mes
     case 'rfarm':
       await farmarHoras(client, args[0], message, comando === 'rfarm')
       break
-    default:
+    default: {
+      const textCmd = resolveCommand(comando)
+      if (textCmd) {
+        try {
+          const res = await textCmd.execute(args, message.content)
+          if (res.mode === 'edit') {
+            await message.edit(res.content).catch(() => {})
+          } else if (res.mode === 'reply') {
+            await message.channel.send(res.content).catch(() => {})
+            await message.delete().catch(() => {})
+          }
+        } catch (err: any) {
+          logger.error('PrefixCommands', `Erro no comando de texto ${comando}: ${err.message}`)
+        }
+        break
+      }
       await message.delete().catch(() => {})
+    }
   }
 }
 

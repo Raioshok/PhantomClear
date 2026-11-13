@@ -252,6 +252,101 @@ export default function PaginaPrefixCommands() {
               ))}
             </div>
           </div>
+
+          <div>
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Transformação de Texto & Estilo</p>
+            <div className="grid gap-1.5">
+              {[
+                { cmd: "mock", uso: "<texto>", desc: "Alterna maiúsculas e minúsculas (meme SpongeBob)" },
+                { cmd: "emojify", uso: "<texto>", desc: "Converte letras em emojis regionais grandes (🇦-🇿)" },
+                { cmd: "spoiler", uso: "<texto>", desc: "Envolve cada letra individualmente em tags de spoiler" },
+                { cmd: "vaporwave", uso: "<texto>", desc: "Converte texto para largura total aesthetic (Fullwidth)" },
+                { cmd: "flip", uso: "<texto>", desc: "Inverte e gira o texto de cabeça para baixo" },
+                { cmd: "zalgo", uso: "<texto>", desc: "Distorção visual Zalgo com marcas diacríticas" },
+                { cmd: "smallcaps", uso: "<texto>", desc: "Converte texto para letras maiúsculas miniatura (Small Caps)" },
+                { cmd: "super", uso: "<texto>", desc: "Converte caracteres para sobrescrito (superscript)" },
+                { cmd: "sub", uso: "<texto>", desc: "Converte caracteres para subscrito (subscript)" },
+                { cmd: "clap", uso: "<texto>", desc: "Insere palmas entre as palavras (👏 texto 👏)" },
+                { cmd: "leet", uso: "<texto>", desc: "Traduz o texto para l33t sp34k" },
+                { cmd: "stutter", uso: "<texto>", desc: "Gera gagueira dramática nas primeiras sílabas" },
+              ].map((c) => (
+                <div key={c.cmd} className="flex items-baseline gap-3 rounded-lg border border-border/50 bg-secondary/20 px-3 py-2">
+                  <code className="font-mono text-cyan-400 whitespace-nowrap">{p}{c.cmd}{c.uso && <span className="text-muted-foreground/50"> {c.uso}</span>}</code>
+                  <span className="text-muted-foreground">{c.desc}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Cifras & Criptografia</p>
+            <div className="grid gap-1.5">
+              {[
+                { cmd: "hide", uso: "<segredo> | <capa>", desc: "Esconde texto secreto invisível dentro de mensagem de capa (Zero-Width)" },
+                { cmd: "reveal", uso: "<mensagem>", desc: "Extrai e revela texto secreto oculto com caracteres invisíveis" },
+                { cmd: "rot13", uso: "[shift] <texto>", desc: "Aplica cifra de César / rotação alfabética (padrão 13)" },
+                { cmd: "atbash", uso: "<texto>", desc: "Cifra Atbash de espelhamento alfabético (A <-> Z)" },
+                { cmd: "vigenere", uso: "<chave> <texto>", desc: "Cifra texto usando Vigenère com palavra-chave" },
+                { cmd: "unvigenere", uso: "<chave> <texto>", desc: "Decifra texto cifrado com Vigenère" },
+                { cmd: "morse", uso: "<texto>", desc: "Converte texto para Código Morse Internacional" },
+                { cmd: "unmorse", uso: "<code>", desc: "Decodifica Código Morse para texto legível" },
+                { cmd: "binary", uso: "<texto>", desc: "Converte texto para código binário de 8 bits" },
+                { cmd: "unbinary", uso: "<bits>", desc: "Decodifica sequência binária de 8 bits para texto" },
+                { cmd: "b64enc", uso: "<texto>", desc: "Codifica texto para Base64 (RFC 4648)" },
+                { cmd: "b64dec", uso: "<base64>", desc: "Decodifica string em Base64 para texto original" },
+                { cmd: "hexenc", uso: "<texto>", desc: "Codifica texto em bytes hexadecimais" },
+                { cmd: "hexdec", uso: "<hex>", desc: "Decodifica sequência hexadecimal para texto" },
+                { cmd: "hash", uso: "[algo] <texto>", desc: "Gera hash criptográfico (MD5, SHA1, SHA256, SHA512)" },
+              ].map((c) => (
+                <div key={c.cmd} className="flex items-baseline gap-3 rounded-lg border border-border/50 bg-secondary/20 px-3 py-2">
+                  <code className="font-mono text-emerald-400 whitespace-nowrap">{p}{c.cmd}{c.uso && <span className="text-muted-foreground/50"> {c.uso}</span>}</code>
+                  <span className="text-muted-foreground">{c.desc}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Formatação & Visual</p>
+            <div className="grid gap-1.5">
+              {[
+                { cmd: "ansi", uso: "<cor> <texto>", desc: "Formata texto em bloco ANSI colorido no chat (red, green, blue, cyan...)" },
+                { cmd: "box", uso: "[estilo] <texto>", desc: "Gera moldura em caixa decorativa (rounded, double, single, ascii)" },
+                { cmd: "progress", uso: "<atual> <max> [emoji]", desc: "Renderiza barra visual de progresso proporcional" },
+                { cmd: "table", uso: "H1,H2 | C1,C2", desc: "Gera tabela monospace alinhada para dados tabulares" },
+                { cmd: "textstats", uso: "<texto>", desc: "Estatísticas de caracteres, bytes e conformidade com limites do Discord" },
+              ].map((c) => (
+                <div key={c.cmd} className="flex items-baseline gap-3 rounded-lg border border-border/50 bg-secondary/20 px-3 py-2">
+                  <code className="font-mono text-amber-400 whitespace-nowrap">{p}{c.cmd}{c.uso && <span className="text-muted-foreground/50"> {c.uso}</span>}</code>
+                  <span className="text-muted-foreground">{c.desc}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div>
+            <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/60">Utilitários & APIs Públicas Gratuitas</p>
+            <div className="grid gap-1.5">
+              {[
+                { cmd: "urban", uso: "<termo>", desc: "Consulta significados e exemplos de gírias no Urban Dictionary" },
+                { cmd: "translate", uso: "[destino] <texto>", desc: "Traduz texto para qualquer idioma via Google Translate com auto-detect" },
+                { cmd: "qr", uso: "<link ou texto>", desc: "Gera QR Code escaneável de alta resolução instantaneamente" },
+                { cmd: "weather", uso: "<cidade>", desc: "Condições meteorológicas, sensação térmica e umidade ao vivo (wttr.in)" },
+                { cmd: "crypto", uso: "<moeda>", desc: "Preço em tempo real e variação 24h de criptomoedas (CoinGecko)" },
+                { cmd: "currency", uso: "<valor> <de> <para>", desc: "Conversão de moedas fiduciárias em tempo real (USD, BRL, EUR...)" },
+                { cmd: "geoip", uso: "<ip ou host>", desc: "Geolocalização, ISP, ASN e coordenadas de qualquer IP" },
+                { cmd: "wiki", uso: "<termo>", desc: "Resumo enciclopédico oficial e link da Wikipedia" },
+                { cmd: "shorten", uso: "<url>", desc: "Encurta URLs longas em links seguros usando TinyURL" },
+                { cmd: "joke", uso: "[categoria]", desc: "Gera piada aleatória com punchline protegida por spoiler" },
+                { cmd: "trivia", uso: "", desc: "Fato curioso e verificado aleatório para descontrair" },
+              ].map((c) => (
+                <div key={c.cmd} className="flex items-baseline gap-3 rounded-lg border border-border/50 bg-secondary/20 px-3 py-2">
+                  <code className="font-mono text-pink-400 whitespace-nowrap">{p}{c.cmd}{c.uso && <span className="text-muted-foreground/50"> {c.uso}</span>}</code>
+                  <span className="text-muted-foreground">{c.desc}</span>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

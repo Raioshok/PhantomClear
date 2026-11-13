@@ -54,6 +54,8 @@ import {
   BellRing,
   PieChart,
   Award,
+  Rocket,
+  CalendarClock,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -140,6 +142,8 @@ const secoesMenu: SecaoMenu[] = [
     itens: [
       { titulo: "Badge Collector", icone: <Shield size={16} />, href: "/badges" },
       { titulo: "Quest & Orbs Farmer", icone: <Award size={16} />, href: "/quest-farmer" },
+      { titulo: "Disboard AutoBumper", icone: <Rocket size={16} />, href: "/autobump" },
+      { titulo: "Command Scheduler", icone: <CalendarClock size={16} />, href: "/scheduler" },
       { titulo: "Username Sniper", icone: <Crosshair size={16} />, href: "/username-sniper" },
       { titulo: "Nitro Sniper", icone: <Gift size={16} />, href: "/nitro-sniper" },
       { titulo: "Status Rotator", icone: <RotateCw size={16} />, href: "/status-rotator" },

@@ -242,6 +242,19 @@ class ApiClient {
   farmVariety() { return this.post<{ taskId: string }>('/tools/badge-collector/farm-variety', {}) }
   updateConnectionVisibility(type: string, id: string, visible: boolean) { return this.patch<{ success: boolean }>('/tools/badge-collector/connection', { type, id, visible }) }
   setGuildClan(guildId: string | null) { return this.patch<{ success: boolean }>('/tools/badge-collector/clan', { guildId }) }
+
+  // Disboard Auto-Bumper
+  getAutoBumpStatus() { return this.get<any>('/tools/autobump/status') }
+  getAutoBumpConfig() { return this.get<any>('/tools/autobump/config') }
+  startAutoBump(data: any) { return this.post<any>('/tools/autobump/start', data) }
+  stopAutoBump() { return this.post<any>('/tools/autobump/stop', {}) }
+
+  // Command & Message Scheduler
+  getScheduledJobs() { return this.get<any[]>('/tools/scheduler/jobs') }
+  createScheduledJob(data: any) { return this.post<any>('/tools/scheduler/jobs', data) }
+  toggleScheduledJob(id: string, active: boolean) { return this.patch<any>(`/tools/scheduler/jobs/${id}`, { active }) }
+  deleteScheduledJob(id: string) { return this.del<any>(`/tools/scheduler/jobs/${id}`) }
+  runScheduledJobNow(id: string) { return this.post<any>(`/tools/scheduler/jobs/${id}/run`, {}) }
 }
 
 export const api = new ApiClient()

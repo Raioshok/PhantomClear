@@ -5,7 +5,7 @@ import {
   LayoutDashboard, User, BarChart3, Trash2, Package, MessageSquare, PhoneOff,
   UserMinus, LogOut, Copy, Image, MoveRight, Timer, MicOff, VolumeX, Users,
   Anchor, Shield, Crosshair, PieChart, Archive, Radio, BellRing, Settings,
-  ListTodo, Terminal, Gamepad2, Search, X, UserCheck, Webhook, RotateCw, Bot, Gift, Award,
+  ListTodo, Terminal, Gamepad2, Search, X, UserCheck, Webhook, RotateCw, Bot, Gift, Award, Rocket, CalendarClock,
 } from "lucide-react"
 import { ThemedIcon } from "@/components/themed-icon"
 import { xpIconForRoute } from "@/lib/xp-icons"
@@ -94,6 +94,8 @@ const GROUPS: PaletteGroup[] = [
     items: [
       { label: "Badge Collector & Farmer", href: "/badges", icon: Shield, keywords: ["badge", "insignia", "hypesquad", "farm", "dev"] },
       { label: "Quest & Orbs Farmer", href: "/quest-farmer", icon: Award, keywords: ["quest", "orbs", "missões", "farm"] },
+      { label: "Disboard AutoBumper", href: "/autobump", icon: Rocket, keywords: ["disboard", "bump", "bumping", "autobump"] },
+      { label: "Command Scheduler", href: "/scheduler", icon: CalendarClock, keywords: ["scheduler", "agendador", "cron", "tarefas"] },
       { label: "Tasks", href: "/tasks", icon: ListTodo },
       { label: "Nitro Sniper", href: "/nitro-sniper", icon: Gift, keywords: ["nitro", "gift", "sniper", "claim"] },
       { label: "Status Rotator", href: "/status-rotator", icon: RotateCw, keywords: ["status", "bio", "rotacao"] },

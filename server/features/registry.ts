@@ -22,6 +22,9 @@ import { webhooksRoutes } from './webhooks'
 import { usernameSniperRoutes } from './username-sniper'
 import { questFarmerRoutes } from './quest-farmer'
 import { badgeCollectorRoutes } from './badge-collector'
+import { autobumpRoutes } from './autobump'
+import { schedulerRoutes } from './scheduler'
+import { messageSniperRoutes } from './message-sniper'
 
 const featureRouter = Router()
 
@@ -48,5 +51,8 @@ featureRouter.use('/', webhooksRoutes)
 featureRouter.use('/', usernameSniperRoutes)
 featureRouter.use('/', questFarmerRoutes)
 featureRouter.use('/', badgeCollectorRoutes)
+featureRouter.use('/', autobumpRoutes)
+featureRouter.use('/', schedulerRoutes)
+featureRouter.use('/', messageSniperRoutes)
 
 export default featureRouter
