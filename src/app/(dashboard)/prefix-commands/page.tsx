@@ -1,10 +1,11 @@
 
 import { useState, useEffect } from "react"
-import { Terminal, Loader2, Power, PowerOff, AlertTriangle, Settings } from "lucide-react"
+import { Terminal, Loader2, Power, PowerOff, AlertTriangle, Settings, Search, Copy, Check, Sparkles } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useTokens } from "@/hooks/use-tokens"
 import { api } from "@/lib/api-client"
+import { ALL_COMMANDS } from "@/lib/nighty-commands"
 
 interface PrefixStatus {
   enabled: boolean
@@ -20,6 +21,9 @@ export default function PaginaPrefixCommands() {
   const [savingPrefix, setSavingPrefix] = useState(false)
   const [newPrefix, setNewPrefix] = useState("")
   const [error, setError] = useState("")
+  const [search, setSearch] = useState("")
+  const [selectedCat, setSelectedCat] = useState<string>("todos")
+  const [copiedCmd, setCopiedCmd] = useState<string | null>(null)
 
   const fetchStatus = async () => {
     setLoading(true)
@@ -347,6 +351,106 @@ export default function PaginaPrefixCommands() {
               ))}
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Explorer Completo dos 209 Comandos do Nighty */}
+      <div className="rounded-xl border border-border bg-card/40 p-6 space-y-4">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border/40 pb-4">
+          <div>
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <h3 className="text-base font-bold text-foreground">Catálogo Completo Nighty ({ALL_COMMANDS.length} Comandos)</h3>
+              <span className="rounded-full bg-primary/10 border border-primary/20 px-2.5 py-0.5 text-[10px] font-mono text-primary font-bold">
+                209 Prontos
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              Todos os 209 comandos do ecossistema Nighty totalmente integrados e executáveis via prefixo ({p}) no chat do Discord.
+            </p>
+          </div>
+
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Buscar entre 209 comandos..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9 h-9 text-xs"
+            />
+          </div>
+        </div>
+
+        {/* Category Pills */}
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {[
+            { id: "todos", label: `Todos (${ALL_COMMANDS.length})` },
+            { id: "admin", label: "Admin & Mod (19)" },
+            { id: "fun", label: "Diversão & Troll (47)" },
+            { id: "text", label: "Texto & Animação (26)" },
+            { id: "tools", label: "Ferramentas & Info (53)" },
+            { id: "settings", label: "Sistema & Config (45)" },
+            { id: "utilities", label: "Utilitários (19)" },
+          ].map((cat) => (
+            <button
+              key={cat.id}
+              onClick={() => setSelectedCat(cat.id)}
+              className={`px-3 py-1 rounded-lg text-xs font-medium transition-colors ${
+                selectedCat === cat.id
+                  ? "bg-primary text-primary-foreground font-semibold shadow-xs"
+                  : "bg-secondary/40 text-muted-foreground hover:bg-secondary/70 hover:text-foreground"
+              }`}
+            >
+              {cat.label}
+            </button>
+          ))}
+        </div>
+
+        {/* Filtered Grid */}
+        <div className="max-h-[500px] overflow-y-auto space-y-1.5 pr-1 pt-2">
+          {ALL_COMMANDS.filter((c) => {
+            const matchCat = selectedCat === "todos" || c.cat === selectedCat
+            const q = search.toLowerCase()
+            const matchSearch =
+              !q ||
+              c.cmd.toLowerCase().includes(q) ||
+              c.desc.toLowerCase().includes(q) ||
+              c.raw.toLowerCase().includes(q)
+            return matchCat && matchSearch
+          }).map((c) => (
+            <div
+              key={c.cmd}
+              onClick={() => {
+                navigator.clipboard.writeText(`${p}${c.cmd}`)
+                setCopiedCmd(c.cmd)
+                setTimeout(() => setCopiedCmd(null), 1500)
+              }}
+              className="flex items-center justify-between gap-3 rounded-lg border border-border/40 bg-secondary/15 px-3 py-2 text-xs hover:border-primary/40 hover:bg-secondary/25 transition-all cursor-pointer group"
+            >
+              <div className="flex items-baseline gap-3 overflow-hidden">
+                <code className="font-mono text-cyan-400 font-semibold shrink-0 group-hover:text-primary transition-colors">
+                  {p}{c.cmd}
+                </code>
+                {c.options.length > 0 && (
+                  <span className="font-mono text-[11px] text-muted-foreground/60 shrink-0">
+                    {c.options.map((o) => `<${o}>`).join(" ")}
+                  </span>
+                )}
+                <span className="text-muted-foreground truncate">{c.desc}</span>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <span className="rounded bg-secondary/50 px-1.5 py-0.5 text-[9px] font-mono uppercase text-muted-foreground">
+                  {c.cat}
+                </span>
+                {copiedCmd === c.cmd ? (
+                  <Check className="h-3.5 w-3.5 text-emerald-400" />
+                ) : (
+                  <Copy className="h-3.5 w-3.5 text-muted-foreground/40 group-hover:text-foreground transition-colors" />
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       </div>
     </div>
