@@ -276,7 +276,18 @@ export default function PaginaAutoBump() {
                   value={channelId}
                   onChange={setChannelId}
                   disabled={status.active || !guildId}
+                  type="text"
                 />
+                <div className="flex items-center gap-2 pt-1">
+                  <span className="text-[10px] text-muted-foreground shrink-0">ID do Canal:</span>
+                  <Input
+                    placeholder="Ou digite/cole o ID do canal..."
+                    value={channelId}
+                    onChange={(e) => setChannelId(e.target.value)}
+                    disabled={status.active}
+                    className="h-8 text-xs font-mono"
+                  />
+                </div>
               </div>
             </div>
 

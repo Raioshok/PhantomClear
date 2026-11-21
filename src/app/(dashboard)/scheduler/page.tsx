@@ -412,7 +412,17 @@ export default function PaginaScheduler() {
                       value={targetId}
                       onChange={setTargetId}
                       disabled={!guildId}
+                      type="text"
                     />
+                    <div className="flex items-center gap-2 pt-1">
+                      <span className="text-[10px] text-muted-foreground shrink-0">ID do Canal:</span>
+                      <Input
+                        placeholder="Ou digite/cole o ID do canal..."
+                        value={targetId}
+                        onChange={(e) => setTargetId(e.target.value)}
+                        className="h-8 text-xs font-mono"
+                      />
+                    </div>
                   </div>
                 </div>
               )}

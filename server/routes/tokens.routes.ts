@@ -783,17 +783,40 @@ router.get('/:id/guilds', async (req, res) => {
     return
   }
 
-  if (!discord.isConnected() || discord.getActiveToken() !== token.token) {
-    res.status(400).json({
-      success: false,
-      error: 'Conta não está conectada. Conecte primeiro.',
-      timestamp: new Date().toISOString(),
-    })
-    return
+  if (discord.isConnected() && discord.getActiveToken() === token.token) {
+    try {
+      const guilds = discord.getGuilds()
+      if (guilds && guilds.length > 0) {
+        res.json({ success: true, data: guilds, timestamp: new Date().toISOString() })
+        return
+      }
+    } catch {}
   }
 
-  const guilds = discord.getGuilds()
-  res.json({ success: true, data: guilds, timestamp: new Date().toISOString() })
+  // REST fallback: always reliable
+  try {
+    const response = await fetch('https://discord.com/api/v9/users/@me/guilds?with_counts=true', {
+      headers: {
+        Authorization: token.token,
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9215 Chrome/138.0.7204.251 Electron/37.6.0 Safari/537.36',
+      },
+    })
+    const data = (await response.json()) as any
+    if (!response.ok) throw new Error(data?.message || `HTTP ${response.status}`)
+    const guilds = Array.isArray(data)
+      ? data.map((g: any) => ({
+          id: g.id,
+          name: g.name,
+          icon: g.icon,
+          memberCount: g.approximate_member_count || 0,
+          owner: Boolean(g.owner),
+        }))
+      : []
+    res.json({ success: true, data: guilds, timestamp: new Date().toISOString() })
+  } catch (err: any) {
+    res.status(400).json({ success: false, error: err.message, timestamp: new Date().toISOString() })
+  }
 })
 
 /**
@@ -806,13 +829,27 @@ router.get('/:id/guilds/:guildId/channels', async (req, res) => {
     res.status(404).json({ success: false, error: 'Token não encontrada', timestamp: new Date().toISOString() })
     return
   }
-  if (!discord.isConnected() || discord.getActiveToken() !== token.token) {
-    res.status(400).json({ success: false, error: 'Conta não está conectada.', timestamp: new Date().toISOString() })
-    return
+  if (discord.isConnected() && discord.getActiveToken() === token.token) {
+    try {
+      const channels = await discord.getGuildChannels(req.params.guildId)
+      if (channels && channels.length > 0) {
+        res.json({ success: true, data: channels, timestamp: new Date().toISOString() })
+        return
+      }
+    } catch {}
   }
+  // REST fallback
   try {
-    const channels = await discord.getGuildChannels(req.params.guildId)
-    res.json({ success: true, data: channels, timestamp: new Date().toISOString() })
+    const response = await fetch(`https://discord.com/api/v9/guilds/${req.params.guildId}/channels`, {
+      headers: {
+        Authorization: token.token,
+        'User-Agent':
+          'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9215 Chrome/138.0.7204.251 Electron/37.6.0 Safari/537.36',
+      },
+    })
+    const data = (await response.json()) as any
+    if (!response.ok) throw new Error(data?.message || `HTTP ${response.status}`)
+    res.json({ success: true, data, timestamp: new Date().toISOString() })
   } catch (err: any) {
     res.status(400).json({ success: false, error: err.message || 'Erro ao buscar canais', timestamp: new Date().toISOString() })
   }
