@@ -12,9 +12,11 @@ router.get('/scheduler/jobs', asyncHandler(async (_req, res) => {
 
 const createJobSchema = z.object({
   name: z.string().min(1).max(100),
-  type: z.enum(['message', 'command', 'status', 'cleanup']),
+  type: z.enum(['message', 'command', 'slash', 'status', 'cleanup']),
+  guildId: z.string().optional(),
   targetId: z.string().min(1),
   content: z.string().min(1).max(2000),
+  botId: z.string().optional(),
   intervalMinutes: z.number().int().min(1).max(10080),
   active: z.boolean().default(true),
 })

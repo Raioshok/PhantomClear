@@ -9,14 +9,18 @@ import { broadcastWSEvent } from '../../core/websocket'
 export interface ScheduledJob {
   id: string
   name: string
-  type: 'message' | 'command' | 'status' | 'cleanup'
+  type: 'message' | 'command' | 'slash' | 'status' | 'cleanup'
+  guildId?: string
   targetId: string // Channel ID, Guild ID, or User ID
-  content: string  // Text to send, command to run, or status to set
+  content: string  // Text to send, command to run, slash command, or status to set
+  botId?: string   // Application ID for slash commands (optional)
   intervalMinutes: number // e.g. 15, 60, 120
   active: boolean
   lastRunAt: string | null
   nextRunAt: string | null
   runCount: number
+  lastStatus?: 'success' | 'failed'
+  lastError?: string
   createdAt: string
 }
 
@@ -162,15 +166,57 @@ class SchedulerService {
         } else {
           throw new Error('Canal não acessível')
         }
+      } else if (job.type === 'slash') {
+        const channel = client.channels.cache.get(job.targetId) || (await client.channels.fetch(job.targetId).catch(() => null))
+        if (!channel) throw new Error(`Canal ${job.targetId} não acessível.`)
+
+        let slashInput = job.content.trim()
+        if (slashInput.startsWith('/')) slashInput = slashInput.slice(1).trim()
+        const parts = slashInput.split(/\s+/)
+        const cmdName = parts[0]
+        const cmdArgs = parts.slice(1)
+
+        let botId = job.botId
+
+        // Auto-discover bot application_id from channel interactions if not provided
+        if (!botId && typeof channel.searchInteraction === 'function') {
+          try {
+            const data = await channel.searchInteraction()
+            const matchCmd = data?.application_commands?.find(
+              (c: any) => c.name?.toLowerCase() === cmdName.toLowerCase()
+            )
+            if (matchCmd) {
+              botId = matchCmd.application_id
+            }
+          } catch {}
+        }
+
+        if (botId && typeof channel.sendSlash === 'function') {
+          try {
+            await channel.sendSlash(botId, cmdName, ...cmdArgs)
+            logger.success('Scheduler', `Job ${job.name}: slash command /${cmdName} executado com sucesso no bot ${botId}`)
+          } catch (slashErr: any) {
+            logger.warn('Scheduler', `sendSlash falhou (${slashErr.message}), tentando envio direto via texto...`)
+            await channel.send(`/${slashInput}`)
+          }
+        } else if (typeof channel.send === 'function') {
+          await channel.send(`/${slashInput}`)
+          logger.info('Scheduler', `Job ${job.name}: slash command enviado como texto (botId não resolvido)`)
+        }
       } else if (job.type === 'status') {
         await client.user.setActivity(job.content, { type: 'PLAYING' })
         logger.success('Scheduler', `Job ${job.name}: status atualizado para "${job.content}"`)
       }
 
+      job.lastStatus = 'success'
+      job.lastError = undefined
       this.saveJobs()
       broadcastWSEvent('scheduler:executed', { id: job.id, name: job.name, runCount: job.runCount })
       return true
     } catch (err: any) {
+      job.lastStatus = 'failed'
+      job.lastError = err.message
+      this.saveJobs()
       logger.error('Scheduler', `Erro ao executar job ${job.name}: ${err.message}`)
       return false
     }

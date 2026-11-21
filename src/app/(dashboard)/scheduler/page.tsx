@@ -4,7 +4,6 @@ import {
   Plus,
   Play,
   Trash2,
-  Power,
   RotateCw,
   MessageSquare,
   Terminal,
@@ -13,11 +12,17 @@ import {
   Clock,
   Layers,
   Sparkles,
+  Server,
+  Hash,
+  AlertTriangle,
+  Zap,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
+import { GuildPicker } from "@/components/guild-picker"
+import { ChannelPicker } from "@/components/channel-picker"
 import { useTokens } from "@/hooks/use-tokens"
 import { useWSEvent } from "@/hooks/use-websocket"
 import { api } from "@/lib/api-client"
@@ -25,14 +30,18 @@ import { api } from "@/lib/api-client"
 interface ScheduledJob {
   id: string
   name: string
-  type: "message" | "command" | "status" | "cleanup"
+  type: "message" | "command" | "slash" | "status" | "cleanup"
+  guildId?: string
   targetId: string
   content: string
+  botId?: string
   intervalMinutes: number
   active: boolean
   lastRunAt: string | null
   nextRunAt: string | null
   runCount: number
+  lastStatus?: "success" | "failed"
+  lastError?: string
   createdAt: string
 }
 
@@ -44,9 +53,11 @@ export default function PaginaScheduler() {
 
   // Form State
   const [name, setName] = useState("")
-  const [type, setType] = useState<"message" | "command" | "status" | "cleanup">("message")
+  const [type, setType] = useState<"message" | "command" | "slash" | "status" | "cleanup">("slash")
+  const [guildId, setGuildId] = useState("")
   const [targetId, setTargetId] = useState("")
   const [content, setContent] = useState("")
+  const [botId, setBotId] = useState("")
   const [intervalMinutes, setIntervalMinutes] = useState(60)
 
   useWSEvent<ScheduledJob[]>("scheduler:updated", (updatedJobs) => {
@@ -57,7 +68,7 @@ export default function PaginaScheduler() {
     setJobs((prev) =>
       prev.map((j) =>
         j.id === evt.id
-          ? { ...j, runCount: evt.runCount, lastRunAt: new Date().toISOString() }
+          ? { ...j, runCount: evt.runCount, lastRunAt: new Date().toISOString(), lastStatus: "success" }
           : j
       )
     )
@@ -81,12 +92,19 @@ export default function PaginaScheduler() {
     e.preventDefault()
     if (!name || !content) return
 
+    if ((type === "message" || type === "command" || type === "slash") && !targetId) {
+      alert("Por favor selecione um servidor e um canal alvo.")
+      return
+    }
+
     try {
       await api.createScheduledJob({
         name,
         type,
+        guildId: guildId || undefined,
         targetId: targetId || "channel_default",
         content,
+        botId: botId || undefined,
         intervalMinutes: Number(intervalMinutes) || 60,
         active: true,
       })
@@ -94,6 +112,8 @@ export default function PaginaScheduler() {
       setName("")
       setContent("")
       setTargetId("")
+      setGuildId("")
+      setBotId("")
       loadJobs()
     } catch (err: any) {
       alert(err.message || "Erro ao criar agendamento")
@@ -135,13 +155,13 @@ export default function PaginaScheduler() {
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-2xl font-bold tracking-tight text-foreground">Command Scheduler</h1>
+                <h1 className="text-2xl font-bold tracking-tight text-foreground">Command & Task Scheduler</h1>
                 <span className="rounded-full border border-primary/30 bg-primary/10 px-2.5 py-0.5 text-[10px] font-semibold text-primary uppercase">
-                  Cron Engine
+                  Cron Engine V2
                 </span>
               </div>
               <p className="text-sm text-muted-foreground mt-0.5">
-                Automatize disparos recorrentes de mensagens, execução de prefix commands e rotações de atividade.
+                Automatize disparos de Slash Commands (/), Prefix Commands (;), mensagens de servidor e status com seletor visual de servidores.
               </p>
             </div>
           </div>
@@ -184,10 +204,12 @@ export default function PaginaScheduler() {
         <Card className="border-border/60 bg-card/60 backdrop-blur-sm">
           <CardContent className="p-4 flex items-center justify-between">
             <div>
-              <p className="text-xs text-muted-foreground">Motor de Fila</p>
-              <p className="text-2xl font-black font-mono text-foreground mt-0.5">SINCRONIZADO</p>
+              <p className="text-xs text-muted-foreground">Suporte a Comandos</p>
+              <p className="text-sm font-bold font-mono text-foreground mt-0.5 uppercase">
+                Slash (/) & Prefix (;)
+              </p>
             </div>
-            <Clock className="h-5 w-5 text-muted-foreground" />
+            <Zap className="h-5 w-5 text-amber-400" />
           </CardContent>
         </Card>
       </div>
@@ -225,14 +247,18 @@ export default function PaginaScheduler() {
                   <div className="flex items-start gap-3">
                     <div
                       className={`flex h-10 w-10 items-center justify-center rounded-xl shrink-0 mt-0.5 ${
-                        job.type === "message"
+                        job.type === "slash"
+                          ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                          : job.type === "message"
                           ? "bg-blue-500/10 text-blue-400 border border-blue-500/20"
                           : job.type === "command"
                           ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
                           : "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
                       }`}
                     >
-                      {job.type === "message" ? (
+                      {job.type === "slash" ? (
+                        <Zap className="h-5 w-5" />
+                      ) : job.type === "message" ? (
                         <MessageSquare className="h-5 w-5" />
                       ) : job.type === "command" ? (
                         <Terminal className="h-5 w-5" />
@@ -243,23 +269,38 @@ export default function PaginaScheduler() {
                     <div>
                       <div className="flex items-center gap-2">
                         <h4 className="font-semibold text-foreground text-sm">{job.name}</h4>
-                        <span className="rounded-md bg-secondary/50 px-2 py-0.5 text-[10px] font-mono text-muted-foreground uppercase">
+                        <span className="rounded-md bg-secondary/50 px-2 py-0.5 text-[10px] font-mono text-muted-foreground uppercase font-bold">
                           {job.type}
                         </span>
                         <span className="text-xs text-muted-foreground font-mono">
                           a cada {job.intervalMinutes}m
                         </span>
+                        {job.lastStatus && (
+                          <span
+                            className={`rounded px-1.5 py-0.2 text-[9px] font-mono uppercase font-bold ${
+                              job.lastStatus === "success"
+                                ? "bg-emerald-500/20 text-emerald-400"
+                                : "bg-rose-500/20 text-rose-400"
+                            }`}
+                          >
+                            {job.lastStatus}
+                          </span>
+                        )}
                       </div>
                       <p className="text-xs font-mono text-primary/80 mt-1 bg-background/60 px-2 py-1 rounded-md border border-border/40 inline-block">
-                        {job.content}
+                        {job.type === "slash" && !job.content.startsWith("/") ? `/${job.content}` : job.content}
                       </p>
-                      <div className="flex items-center gap-4 text-[11px] text-muted-foreground mt-2">
+                      <div className="flex flex-wrap items-center gap-4 text-[11px] text-muted-foreground mt-2">
+                        <span>Alvo: <code className="font-mono text-foreground font-semibold">{job.targetId}</code></span>
                         <span>Disparos: <strong>{job.runCount}</strong></span>
                         {job.lastRunAt && (
                           <span>Último: {new Date(job.lastRunAt).toLocaleTimeString()}</span>
                         )}
                         {job.nextRunAt && job.active && (
                           <span>Próximo: {new Date(job.nextRunAt).toLocaleTimeString()}</span>
+                        )}
+                        {job.lastError && (
+                          <span className="text-rose-400 font-sans">Erro: {job.lastError}</span>
                         )}
                       </div>
                     </div>
@@ -297,7 +338,7 @@ export default function PaginaScheduler() {
       {/* Create Modal */}
       {modalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-          <div className="w-full max-w-lg rounded-2xl border border-border/80 bg-card p-6 shadow-2xl space-y-4">
+          <div className="w-full max-w-lg rounded-2xl border border-border/80 bg-card p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between pb-2 border-b border-border/40">
               <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                 <CalendarClock className="h-5 w-5 text-primary" /> Novo Agendamento
@@ -308,10 +349,10 @@ export default function PaginaScheduler() {
             </div>
 
             <form onSubmit={handleCreate} className="space-y-4">
-              <div className="space-y-2">
+              <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-muted-foreground">Nome Identificador</label>
                 <Input
-                  placeholder="Ex: Anúncio do Servidor, Limpar Chat, etc."
+                  placeholder="Ex: Auto-Daily UnbelievaBoat, Mensagem Periódica, etc."
                   value={name}
                   onChange={(e) => setName(e.target.value)}
                   required
@@ -319,20 +360,21 @@ export default function PaginaScheduler() {
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-muted-foreground">Tipo de Ação</label>
                   <select
                     value={type}
                     onChange={(e) => setType(e.target.value as any)}
                     className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
                   >
-                    <option value="message">Mensagem Simples</option>
+                    <option value="slash">Slash Command (/)</option>
                     <option value="command">Prefix Command (;)</option>
+                    <option value="message">Mensagem Simples</option>
                     <option value="status">Atualizar Status</option>
                   </select>
                 </div>
 
-                <div className="space-y-2">
+                <div className="space-y-1.5">
                   <label className="text-xs font-semibold text-muted-foreground">Intervalo (Minutos)</label>
                   <Input
                     type="number"
@@ -345,33 +387,89 @@ export default function PaginaScheduler() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-muted-foreground">ID do Canal / Alvo</label>
-                <Input
-                  placeholder="ID do canal Discord (ex: 123456789012345678)"
-                  value={targetId}
-                  onChange={(e) => setTargetId(e.target.value)}
-                  required={type === "message" || type === "command"}
-                />
-              </div>
+              {/* Server & Channel Picker */}
+              {(type === "message" || type === "command" || type === "slash") && (
+                <div className="space-y-3 pt-1 border-t border-border/40">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                      <Server className="h-3.5 w-3.5 text-primary" /> Servidor Alvo
+                    </label>
+                    <GuildPicker
+                      value={guildId}
+                      onChange={(val) => {
+                        setGuildId(val)
+                        setTargetId("")
+                      }}
+                    />
+                  </div>
 
-              <div className="space-y-2">
-                <label className="text-xs font-semibold text-muted-foreground">
-                  Conteúdo / Comando
-                </label>
-                <textarea
-                  placeholder={
-                    type === "command"
-                      ? "Ex: ;cl (para limpar canal) ou ;farm"
-                      : "Digite a mensagem que será enviada periodicamente..."
-                  }
-                  value={content}
-                  onChange={(e) => setContent(e.target.value)}
-                  required
-                  rows={3}
-                  className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring resize-none"
-                />
-              </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                      <Hash className="h-3.5 w-3.5 text-primary" /> Canal Alvo
+                    </label>
+                    <ChannelPicker
+                      guildId={guildId}
+                      value={targetId}
+                      onChange={setTargetId}
+                      disabled={!guildId}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Slash Command Options */}
+              {type === "slash" && (
+                <div className="space-y-3 pt-1 border-t border-border/40">
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                      <Zap className="h-3.5 w-3.5 text-amber-400" /> Comando Slash (ex: /bump, /daily, /work)
+                    </label>
+                    <Input
+                      placeholder="bump ou daily ou work"
+                      value={content}
+                      onChange={(e) => setContent(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-semibold text-muted-foreground">
+                      ID do Bot / Aplicação (Opcional)
+                    </label>
+                    <Input
+                      placeholder="Deixe em branco para auto-detectar o bot no canal"
+                      value={botId}
+                      onChange={(e) => setBotId(e.target.value)}
+                    />
+                    <span className="text-[11px] text-muted-foreground">
+                      O PhantomClear inspeciona os comandos registrados no canal para achar o ID correto automaticamente.
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Content for message/prefix/status */}
+              {type !== "slash" && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground">
+                    {type === "status" ? "Novo Status" : type === "command" ? "Comando com Prefixo" : "Mensagem a Enviar"}
+                  </label>
+                  <textarea
+                    placeholder={
+                      type === "command"
+                        ? "Ex: ;cl (para limpar canal) ou ;farm"
+                        : type === "status"
+                        ? "Ex: Jogando PhantomClear V2"
+                        : "Digite a mensagem que será enviada periodicamente..."
+                    }
+                    value={content}
+                    onChange={(e) => setContent(e.target.value)}
+                    required
+                    rows={3}
+                    className="w-full px-3 py-2 rounded-md border border-input bg-background text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring resize-none"
+                  />
+                </div>
+              )}
 
               <div className="flex justify-end gap-3 pt-3">
                 <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
