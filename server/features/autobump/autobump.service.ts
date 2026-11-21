@@ -1,4 +1,5 @@
 import { discord } from '../../services/discord.service'
+import { storage } from '../../services/storage.service'
 import { taskManager } from '../../services/task-manager.service'
 import { sleep } from '../../utils/helpers'
 import { logger } from '../../core/logger'
@@ -10,6 +11,7 @@ export interface AutoBumpConfig {
   intervalMinutes: number // Default 120 (2h)
   jitterMinutes: number   // Random delay 1-5m
   mode: 'slash' | 'text'  // 'slash' (/bump) or 'text' (!d bump)
+  bumpCarlBot: boolean    // Also bump Carl-bot (!bump / /bump)
 }
 
 export interface AutoBumpStatus {
@@ -23,9 +25,11 @@ export interface AutoBumpStatus {
   totalBumps: number
   lastStatus: 'success' | 'failed' | 'cooldown' | 'idle'
   lastMessage: string
+  carlBotBumped?: boolean
 }
 
 const DISBOARD_BOT_ID = '302050872383242240'
+const CARLBOT_BOT_ID = '235148962103951360'
 
 class AutoBumpService {
   private config: AutoBumpConfig = {
@@ -34,6 +38,7 @@ class AutoBumpService {
     intervalMinutes: 120,
     jitterMinutes: 2,
     mode: 'slash',
+    bumpCarlBot: true,
   }
 
   private isRunning = false
@@ -72,6 +77,7 @@ class AutoBumpService {
       totalBumps: this.totalBumps,
       lastStatus: this.lastStatus,
       lastMessage: this.lastMessage,
+      carlBotBumped: this.config.bumpCarlBot,
     }
   }
 
@@ -91,11 +97,11 @@ class AutoBumpService {
 
     this.isRunning = true
     this.lastStatus = 'idle'
-    this.lastMessage = 'Disboard Auto-Bumper iniciado.'
+    this.lastMessage = 'Disboard & Carlbot Auto-Bumper iniciado.'
 
     const task = taskManager.createTask('call-utils' as any, {
       total: 100,
-      phase: 'Disboard Auto-Bumper ativo',
+      phase: 'Disboard & Carlbot Auto-Bumper ativo',
     })
     this.taskId = task.id
     taskManager.startTask(task.id)
@@ -129,12 +135,11 @@ class AutoBumpService {
     return this.getStatus()
   }
 
-  private scheduleNext() {
+  private scheduleNext(customMinutes?: number) {
     if (!this.isRunning) return
 
-    // Base interval in ms (e.g. 120 minutes = 7,200,000 ms)
-    const baseMs = this.config.intervalMinutes * 60 * 1000
-    // Add random jitter (1 to jitterMinutes)
+    const minutes = customMinutes ?? this.config.intervalMinutes
+    const baseMs = minutes * 60 * 1000
     const jitterMs = Math.floor(Math.random() * Math.max(1, this.config.jitterMinutes) * 60 * 1000)
     const totalDelay = baseMs + jitterMs
 
@@ -153,44 +158,131 @@ class AutoBumpService {
   private async executeBump(): Promise<boolean> {
     if (!this.isRunning) return false
 
-    const client = discord.getActiveClient()
+    let client = discord.getActiveClient()
+    const token = discord.getActiveToken() || storage.getTokens().find((t) => t.status === 'valid')?.token
+
+    // Auto-connect if client is offline or reconnecting
     if (!client || !client.isReady()) {
-      this.lastStatus = 'failed'
-      this.lastMessage = 'Discord Client não está conectado.'
-      logger.warn('AutoBump', 'Falha ao executar bump: cliente Discord offline')
-      this.scheduleNext()
-      return false
+      if (token) {
+        logger.info('AutoBump', 'Discord client offline. Tentando auto-conectar...')
+        try {
+          await discord.connect(token)
+          client = discord.getActiveClient()
+        } catch (e: any) {
+          logger.warn('AutoBump', `Auto-conexão falhou: ${e.message}`)
+        }
+      }
     }
 
+    this.lastBumpAt = Date.now()
+    let disboardSuccess = false
+    let carlbotSuccess = false
+    const results: string[] = []
+
+    // 1. DISBOARD BUMP
     try {
-      const channel = client.channels.cache.get(this.config.channelId) || (await client.channels.fetch(this.config.channelId).catch(() => null))
-      if (!channel) {
-        throw new Error(`Canal de bump ${this.config.channelId} não encontrado.`)
-      }
+      if (client && client.isReady()) {
+        const channel =
+          client.channels.cache.get(this.config.channelId) ||
+          (await client.channels.fetch(this.config.channelId).catch(() => null))
 
-      this.lastBumpAt = Date.now()
-      let success = false
-
-      if (this.config.mode === 'slash' && typeof channel.sendSlash === 'function') {
-        try {
-          await channel.sendSlash(DISBOARD_BOT_ID, 'bump')
-          success = true
-          this.lastMessage = 'Comando slash /bump enviado com sucesso ao Disboard!'
-        } catch (slashErr: any) {
-          logger.warn('AutoBump', `sendSlash falhou (${slashErr.message}), tentando modo texto fallback...`)
-          await channel.send('!d bump')
-          success = true
-          this.lastMessage = 'Comando !d bump enviado via texto (fallback).'
+        if (channel) {
+          if (this.config.mode === 'slash' && typeof channel.sendSlash === 'function') {
+            try {
+              await channel.sendSlash(DISBOARD_BOT_ID, 'bump')
+              disboardSuccess = true
+              results.push('Disboard /bump enviado via slash command')
+            } catch (slashErr: any) {
+              logger.warn('AutoBump', `sendSlash Disboard falhou (${slashErr.message}), tentando fallback texto...`)
+              await channel.send('!d bump')
+              disboardSuccess = true
+              results.push('Disboard !d bump enviado via texto')
+            }
+          } else {
+            await channel.send('!d bump')
+            disboardSuccess = true
+            results.push('Disboard !d bump enviado via texto')
+          }
         }
-      } else {
-        await channel.send('!d bump')
-        success = true
-        this.lastMessage = 'Comando !d bump enviado via texto.'
       }
 
+      // REST API fallback for Disboard if gateway failed
+      if (!disboardSuccess && token) {
+        logger.info('AutoBump', 'Enviando Disboard !d bump via REST fallback...')
+        const res = await fetch(`https://discord.com/api/v9/channels/${this.config.channelId}/messages`, {
+          method: 'POST',
+          headers: {
+            Authorization: token,
+            'Content-Type': 'application/json',
+            'User-Agent':
+              'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9215 Chrome/138.0.7204.251 Electron/37.6.0 Safari/537.36',
+          },
+          body: JSON.stringify({ content: '!d bump' }),
+        })
+        if (res.ok) {
+          disboardSuccess = true
+          results.push('Disboard !d bump enviado via REST fallback')
+        }
+      }
+    } catch (err: any) {
+      logger.error('AutoBump', `Erro no bump do Disboard: ${err.message}`)
+    }
+
+    // 2. CARLBOT BUMP (if enabled)
+    if (this.config.bumpCarlBot) {
+      await sleep(3500) // Natural delay between bot bumps to prevent anti-spam
+      try {
+        if (client && client.isReady()) {
+          const channel =
+            client.channels.cache.get(this.config.channelId) ||
+            (await client.channels.fetch(this.config.channelId).catch(() => null))
+
+          if (channel) {
+            if (this.config.mode === 'slash' && typeof channel.sendSlash === 'function') {
+              try {
+                await channel.sendSlash(CARLBOT_BOT_ID, 'bump')
+                carlbotSuccess = true
+                results.push('Carl-bot /bump enviado via slash command')
+              } catch {
+                await channel.send('!bump')
+                carlbotSuccess = true
+                results.push('Carl-bot !bump enviado via texto')
+              }
+            } else {
+              await channel.send('!bump')
+              carlbotSuccess = true
+              results.push('Carl-bot !bump enviado via texto')
+            }
+          }
+        }
+
+        // REST fallback for Carlbot
+        if (!carlbotSuccess && token) {
+          const res = await fetch(`https://discord.com/api/v9/channels/${this.config.channelId}/messages`, {
+            method: 'POST',
+            headers: {
+              Authorization: token,
+              'Content-Type': 'application/json',
+              'User-Agent':
+                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) discord/1.0.9215 Chrome/138.0.7204.251 Electron/37.6.0 Safari/537.36',
+            },
+            body: JSON.stringify({ content: '!bump' }),
+          })
+          if (res.ok) {
+            carlbotSuccess = true
+            results.push('Carl-bot !bump enviado via REST fallback')
+          }
+        }
+      } catch (err: any) {
+        logger.error('AutoBump', `Erro no bump do Carl-bot: ${err.message}`)
+      }
+    }
+
+    if (disboardSuccess || carlbotSuccess) {
       this.totalBumps++
       this.lastStatus = 'success'
-      logger.success('AutoBump', `🚀 BUMP ENVIADO COM SUCESSO! Total acumulado: ${this.totalBumps}`)
+      this.lastMessage = results.join(' • ')
+      logger.success('AutoBump', `🚀 BUMP CONCLUÍDO! (${this.lastMessage})`)
 
       broadcastWSEvent('autobump:bumped', {
         total: this.totalBumps,
@@ -200,11 +292,11 @@ class AutoBumpService {
 
       this.scheduleNext()
       return true
-    } catch (err: any) {
+    } else {
       this.lastStatus = 'failed'
-      this.lastMessage = `Erro ao enviar bump: ${err.message}`
-      logger.error('AutoBump', `Erro no auto-bump: ${err.message}`)
-      this.scheduleNext()
+      this.lastMessage = 'Falha ao despachar bump: verifique o ID do canal e se a conta tem acesso a ele.'
+      logger.error('AutoBump', this.lastMessage)
+      this.scheduleNext(15) // Retry sooner (15 min) on failure instead of waiting 2 hours
       return false
     }
   }

@@ -12,9 +12,11 @@ import {
   RotateCw,
   Shuffle,
   ShieldAlert,
+  Bot,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Switch } from "@/components/ui/switch"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { GuildPicker } from "@/components/guild-picker"
 import { ChannelPicker } from "@/components/channel-picker"
@@ -33,6 +35,7 @@ interface AutoBumpStatus {
   totalBumps: number
   lastStatus: "success" | "failed" | "cooldown" | "idle"
   lastMessage: string
+  carlBotBumped?: boolean
 }
 
 export default function PaginaAutoBump() {
@@ -42,6 +45,7 @@ export default function PaginaAutoBump() {
   const [intervalMinutes, setIntervalMinutes] = useState(120)
   const [jitterMinutes, setJitterMinutes] = useState(2)
   const [mode, setMode] = useState<"slash" | "text">("slash")
+  const [bumpCarlBot, setBumpCarlBot] = useState(true)
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState<AutoBumpStatus>({
     active: false,
@@ -109,12 +113,16 @@ export default function PaginaAutoBump() {
         if (cfg.data.intervalMinutes) setIntervalMinutes(cfg.data.intervalMinutes)
         if (cfg.data.jitterMinutes) setJitterMinutes(cfg.data.jitterMinutes)
         if (cfg.data.mode) setMode(cfg.data.mode)
+        if (cfg.data.bumpCarlBot !== undefined) setBumpCarlBot(Boolean(cfg.data.bumpCarlBot))
       }
     } catch {}
   }
 
   const handleStart = async () => {
-    if (!channelId) return
+    if (!channelId) {
+      alert("Por favor selecione um servidor e um canal alvo antes de iniciar.")
+      return
+    }
     setLoading(true)
     try {
       const res = await api.startAutoBump({
@@ -123,6 +131,7 @@ export default function PaginaAutoBump() {
         intervalMinutes: Number(intervalMinutes) || 120,
         jitterMinutes: Number(jitterMinutes) || 2,
         mode,
+        bumpCarlBot,
       })
       if (res.data) setStatus(res.data)
     } catch (err: any) {
@@ -329,10 +338,28 @@ export default function PaginaAutoBump() {
                   className="w-full h-10 px-3 rounded-md border border-input bg-background text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring"
                 >
                   <option value="slash">Slash (/bump via interaction)</option>
-                  <option value="text">Texto (!d bump)</option>
+                  <option value="text">Texto (!d bump / !bump)</option>
                 </select>
                 <span className="text-[11px] text-muted-foreground">Slash recomendado para discrição.</span>
               </div>
+            </div>
+
+            {/* Carl-bot Bump Toggle */}
+            <div className="flex items-center justify-between rounded-xl border border-border/60 bg-secondary/15 p-3.5 mt-2">
+              <div className="space-y-0.5">
+                <div className="flex items-center gap-2">
+                  <Bot className="h-4 w-4 text-emerald-400" />
+                  <p className="text-xs font-semibold text-foreground">Bumpar Carl-bot Concomitantemente</p>
+                </div>
+                <p className="text-[11px] text-muted-foreground">
+                  Dispara /bump e !bump também para o bot do Carl-bot (ID: 235148962103951360) 3 segundos após o Disboard.
+                </p>
+              </div>
+              <Switch
+                checked={bumpCarlBot}
+                onCheckedChange={setBumpCarlBot}
+                disabled={status.active}
+              />
             </div>
 
             <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 flex items-start gap-3 mt-4">

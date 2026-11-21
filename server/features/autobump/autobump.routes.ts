@@ -20,6 +20,7 @@ const startSchema = z.object({
   intervalMinutes: z.number().int().min(1).max(1440).optional(),
   jitterMinutes: z.number().int().min(0).max(60).optional(),
   mode: z.enum(['slash', 'text']).optional(),
+  bumpCarlBot: z.boolean().optional(),
 })
 
 router.post('/autobump/start', validate(startSchema), asyncHandler(async (req, res) => {
