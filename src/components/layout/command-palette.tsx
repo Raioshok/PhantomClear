@@ -5,7 +5,7 @@ import {
   LayoutDashboard, User, BarChart3, Trash2, Package, MessageSquare, PhoneOff,
   UserMinus, LogOut, Copy, Image, MoveRight, Timer, MicOff, VolumeX, Users,
   Anchor, Shield, Crosshair, PieChart, Archive, Radio, BellRing, Settings,
-  ListTodo, Terminal, Gamepad2, Search, X, UserCheck, Webhook, RotateCw, Bot, Gift, Award, Rocket, CalendarClock, Trophy,
+  ListTodo, Terminal, Gamepad2, Search, X, UserCheck, Webhook, RotateCw, Bot, Gift, Award, Rocket, CalendarClock, Trophy, Footprints,
 } from "lucide-react"
 import { ThemedIcon } from "@/components/themed-icon"
 import { xpIconForRoute } from "@/lib/xp-icons"
@@ -71,6 +71,7 @@ const GROUPS: PaletteGroup[] = [
       { label: "Elevador", href: "/elevador", icon: MoveRight },
       { label: "Coleira", href: "/coleira", icon: Anchor },
       { label: "Proteger User", href: "/proteger-user", icon: Shield },
+      { label: "Seguir Membro", href: "/seguir-usuario", icon: Footprints, keywords: ["seguir", "follow", "call", "stalker"] },
       { label: "Tormentar", href: "/tormentar", icon: Crosshair },
     ],
   },

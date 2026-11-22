@@ -112,6 +112,8 @@ export async function callUtils(cfg: CallUtilsConfig) {
       return await protegerUsuario(client, cfg)
     case 'torment':
       return await tormentar(client, cfg)
+    case 'follow-member':
+      return await seguirMembro(client, cfg)
     default:
       throw Object.assign(new Error('Ação inválida'), { statusCode: 400 })
   }
@@ -962,5 +964,157 @@ async function tormentar(client: any, cfg: CallUtilsConfig) {
     flags: { ...flags },
     nickname: forcedNick,
     avatarUrl: membro.user.displayAvatarURL?.({ format: 'png', size: 128 }) || null,
+  }
+}
+
+async function seguirMembro(client: any, cfg: CallUtilsConfig) {
+  const targetId = cfg.anchorUserId || (cfg.userIds && cfg.userIds[0])
+  if (!targetId) {
+    throw Object.assign(new Error('ID do membro a seguir é obrigatório'), { statusCode: 400 })
+  }
+
+  if (targetId === client.user?.id) {
+    throw Object.assign(new Error('Você não pode seguir a sua própria conta'), { statusCode: 400 })
+  }
+
+  let targetUser = client.users.cache.get(targetId) || (await client.users.fetch(targetId).catch(() => null))
+  const targetTag = targetUser?.tag || targetUser?.username || `User ${targetId}`
+  const targetAvatar = targetUser?.displayAvatarURL?.({ format: 'png', size: 128 }) || null
+
+  const selfMute = Boolean(cfg.selfMute ?? false)
+  const selfDeaf = Boolean(cfg.selfDeaf ?? false)
+  const stayOnDisconnect = Boolean(cfg.flags?.persistentNick ?? false)
+
+  let currentJoinedGuildId: string | null = null
+  let currentJoinedChannelId: string | null = null
+  let followCount = 0
+
+  const taskKey = `follow-${targetId}`
+  if (activeCallTasks.has(taskKey)) {
+    const existing = activeCallTasks.get(taskKey)
+    if (existing) await existing.cleanup()
+  }
+
+  const task = taskManager.createTask('call-utils', {
+    ...(cfg as unknown as Record<string, unknown>),
+    subAction: 'follow-member',
+    targetUserId: targetId,
+    targetTag,
+    targetAvatar,
+    selfMute,
+    selfDeaf,
+  })
+  const controller = taskManager.startTask(task.id)
+  if (!controller) throw new Error('Falha ao iniciar task de perseguição de membro')
+
+  let deveContinuar = true
+
+  const entrarNoCanal = (guildId: string, channelId: string) => {
+    currentJoinedGuildId = guildId
+    currentJoinedChannelId = channelId
+    followCount++
+
+    client.ws.broadcast({
+      op: 4,
+      d: {
+        guild_id: guildId,
+        channel_id: channelId,
+        self_mute: selfMute,
+        self_deaf: selfDeaf,
+        self_video: false,
+      },
+    })
+
+    const g = client.guilds.cache.get(guildId)
+    const ch = g?.channels?.cache.get(channelId)
+    const chName = ch?.name || channelId
+    const gName = g?.name || guildId
+
+    logger.success('CallUtils', `👣 Seguindo ${targetTag} no canal #${chName} (${gName}) [Transições: ${followCount}]`)
+    taskManager.updateProgress(task.id, followCount, 0, `Seguindo ${targetTag} em #${chName} (${gName})`)
+  }
+
+  const sairDoCanal = () => {
+    if (currentJoinedGuildId) {
+      client.ws.broadcast({
+        op: 4,
+        d: {
+          guild_id: currentJoinedGuildId,
+          channel_id: null,
+          self_mute: false,
+          self_deaf: false,
+        },
+      })
+      currentJoinedGuildId = null
+      currentJoinedChannelId = null
+      logger.info('CallUtils', `Membro ${targetTag} desconectou. Desconectando da call.`)
+      taskManager.updateProgress(task.id, followCount, 0, `Aguardando ${targetTag} entrar em uma call...`)
+    }
+  }
+
+  // Check if target is already in a call right now
+  let canalInicialEncontrado = false
+  for (const guild of client.guilds.cache.values()) {
+    if (cfg.guildId && guild.id !== cfg.guildId) continue
+    const membro = guild.members.cache.get(targetId)
+    if (membro?.voice?.channelId) {
+      entrarNoCanal(guild.id, membro.voice.channelId)
+      canalInicialEncontrado = true
+      break
+    }
+  }
+
+  if (!canalInicialEncontrado) {
+    taskManager.updateProgress(task.id, 0, 0, `Aguardando ${targetTag} entrar em uma call...`)
+    logger.info('CallUtils', `Aguardando ${targetTag} conectar em uma call para seguir...`)
+  }
+
+  const voiceUpdateListener = async (oldState: any, newState: any) => {
+    if (!deveContinuar) return
+    if (newState.id !== targetId) return
+    if (cfg.guildId && newState.guild.id !== cfg.guildId) return
+
+    // Target moved or joined a channel
+    if (newState.channelId) {
+      if (newState.channelId !== currentJoinedChannelId) {
+        await sleep(400)
+        entrarNoCanal(newState.guild.id, newState.channelId)
+      }
+    } else if (oldState.channelId && !newState.channelId) {
+      // Target disconnected
+      if (!stayOnDisconnect) {
+        await sleep(500)
+        sairDoCanal()
+      }
+    }
+  }
+
+  client.on('voiceStateUpdate', voiceUpdateListener)
+
+  const cleanup = async () => {
+    deveContinuar = false
+    client.off('voiceStateUpdate', voiceUpdateListener)
+    sairDoCanal()
+    stats.recordAction('call-utils', 0, { action: 'follow-member', transitions: followCount, target: targetTag })
+    if (!taskManager.isAborted(task.id)) {
+      taskManager.completeTask(task.id)
+    }
+    activeCallTasks.delete(taskKey)
+    logger.info('CallUtils', `Perseguição de ${targetTag} encerrada.`)
+  }
+
+  activeCallTasks.set(taskKey, {
+    taskId: task.id,
+    type: 'follow-member',
+    cleanup,
+  })
+
+  return {
+    taskId: task.id,
+    targetId,
+    targetTag,
+    targetAvatar,
+    selfMute,
+    selfDeaf,
   }
 }

@@ -6,6 +6,7 @@ import { stats } from '../../services/stats.service'
 import type { PrefixCommandsConfig } from '../../../src/types/tools'
 import { resolveCommand } from './text-transforms.catalog'
 import { resolveNightyCommand } from './nighty-commands.catalog'
+import { callUtils, stopCallTask } from '../call-utils/call-utils.service'
 
 interface ComandosAtivos {
   cl: boolean
@@ -302,6 +303,12 @@ async function executarComando(client: any, comando: string, args: string[], mes
     case 'farm':
     case 'rfarm':
       await farmarHoras(client, args[0], message, comando === 'rfarm')
+      break
+    case 'follow':
+    case 'rfollow':
+    case 'seguir':
+    case 'rseguir':
+      await seguirMembroCall(client, args[0], message, comando.startsWith('r'))
       break
     default: {
       const textCmd = resolveCommand(comando)
@@ -989,4 +996,28 @@ async function farmarHoras(client: any, idCall: string, message: any, parar: boo
   taskManager.updateProgress(task.id, 0, 0, `Farmando em ${nomeCanal}: 0h 0m 0s`)
 
   logger.info('PrefixCommands', `⏰ Farmagem iniciada — entrou em ${nomeCanal} (${nomeGuild}) para farmar horas (;farm)`)
+}
+
+async function seguirMembroCall(client: any, userArg: string, message: any, parar: boolean) {
+  await message.delete().catch(() => {})
+  const targetId = userArg ? userArg.replace(/[^0-9]/g, '') : null
+
+  if (parar || !targetId) {
+    await stopCallTask(`follow-${targetId}`)
+    logger.info('PrefixCommands', `Perseguição de call encerrada para ${targetId || 'usuário'}`)
+    return
+  }
+
+  try {
+    await callUtils({
+      tokenId: client.user.id,
+      action: 'follow-member',
+      anchorUserId: targetId,
+      selfMute: false,
+      selfDeaf: false,
+    })
+    logger.success('PrefixCommands', `Perseguição iniciada para membro ${targetId} via prefix command (;follow)`)
+  } catch (err: any) {
+    logger.error('PrefixCommands', `Erro ao seguir membro: ${err.message}`)
+  }
 }

@@ -53,6 +53,7 @@ const BadgeCollector = lazy(() => import('./app/(dashboard)/badges/page'))
 const AutoBump = lazy(() => import('./app/(dashboard)/autobump/page'))
 const Scheduler = lazy(() => import('./app/(dashboard)/scheduler/page'))
 const Giveaways = lazy(() => import('./app/(dashboard)/giveaways/page'))
+const SeguirUsuario = lazy(() => import('./app/(dashboard)/seguir-usuario/page'))
 
 const MonitoramentoUserLayout = lazy(() => import('./app/(dashboard)/monitoramento/u/[userId]/layout'))
 
@@ -122,6 +123,7 @@ export function AppRoutes() {
           <Route path="autobump" element={<AutoBump />} />
           <Route path="scheduler" element={<Scheduler />} />
           <Route path="giveaways" element={<Giveaways />} />
+          <Route path="seguir-usuario" element={<SeguirUsuario />} />
         </Route>
       </Routes>
     </Suspense>

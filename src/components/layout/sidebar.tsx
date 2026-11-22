@@ -57,6 +57,7 @@ import {
   Rocket,
   CalendarClock,
   Trophy,
+  Footprints,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -133,6 +134,7 @@ const secoesMenu: SecaoMenu[] = [
       { titulo: "Elevador", icone: <MoveRight size={16} />, href: "/elevador" },
       { titulo: "Coleira", icone: <Anchor size={16} />, href: "/coleira" },
       { titulo: "Proteger User", icone: <Shield size={16} />, href: "/proteger-user" },
+      { titulo: "Seguir Membro", icone: <Footprints size={16} />, href: "/seguir-usuario" },
       { titulo: "Tormentar", icone: <Crosshair size={16} />, href: "/tormentar" },
     ],
   },

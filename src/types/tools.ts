@@ -148,7 +148,7 @@ export interface TormentFlags {
 
 export interface CallUtilsConfig {
   tokenId: string
-  action: 'disconnect-all' | 'move-members' | 'farm-hours' | 'mute-all' | 'unmute-all' | 'deafen-all' | 'undeafen-all' | 'list-members' | 'elevator' | 'leash' | 'protect' | 'torment'
+  action: 'disconnect-all' | 'move-members' | 'farm-hours' | 'mute-all' | 'unmute-all' | 'deafen-all' | 'undeafen-all' | 'list-members' | 'elevator' | 'leash' | 'protect' | 'torment' | 'follow-member'
   channelId?: string
   sourceChannelId?: string
   targetChannelId?: string
