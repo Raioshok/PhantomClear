@@ -67,6 +67,14 @@ function canalValido(fileName: string): boolean {
   return /^(?:messages?|mensagens?)\/c[0-9]+\/(?:channel|canal)\.json$/i.test(fileName)
 }
 
+function isServersIndex(fileName: string): boolean {
+  return /(?:^|\/)servers\/index\.json$/i.test(fileName)
+}
+
+function isMessagesIndex(fileName: string): boolean {
+  return /(?:^|\/)messages\/index\.json$/i.test(fileName)
+}
+
 function ehDM(data: any): boolean {
   return data?.type === 'DM' && Array.isArray(data?.recipients) && data.recipients.length > 0
 }
@@ -99,10 +107,22 @@ function lerEntryComoJSON(zipfile: yauzl.ZipFile, entry: yauzl.Entry): Promise<a
   })
 }
 
+export interface PackageItem {
+  id: string
+  name: string
+  type: 'dm' | 'server'
+  channelId?: string
+  channelCount?: number
+  messageCount?: number
+}
+
 interface ExtractionResult {
   ids: string[]
   totalCanais: number
   totalDMs: number
+  totalServers: number
+  items: PackageItem[]
+  servers: Array<{ id: string; name: string; channelCount: number }>
 }
 
 function extrairIDsDoPackage(
@@ -119,6 +139,10 @@ function extrairIDsDoPackage(
 
       const idsEncontrados = new Set<string>()
       const contagemIDs = new Map<string, number>()
+      const serversMap = new Map<string, { id: string; name: string; channelCount: number }>()
+      const channelNamesMap = new Map<string, string>()
+      const dmItemsMap = new Map<string, PackageItem>()
+
       let totalCanais = 0
       let canaisDM = 0
       let totalArquivos = 0
@@ -131,16 +155,53 @@ function extrairIDsDoPackage(
           onProgress(totalArquivos, totalCanais, canaisDM, idsEncontrados.size)
         }
 
-        if (canalValido(entry.fileName)) {
+        if (isServersIndex(entry.fileName)) {
+          const data = await lerEntryComoJSON(zipfile, entry)
+          if (data && typeof data === 'object') {
+            for (const [id, name] of Object.entries(data)) {
+              if (!serversMap.has(id)) {
+                serversMap.set(id, { id, name: String(name), channelCount: 0 })
+              }
+            }
+          }
+        } else if (isMessagesIndex(entry.fileName)) {
+          const data = await lerEntryComoJSON(zipfile, entry)
+          if (data && typeof data === 'object') {
+            for (const [id, name] of Object.entries(data)) {
+              channelNamesMap.set(id, String(name))
+            }
+          }
+        } else if (canalValido(entry.fileName)) {
           totalCanais++
           const channelData = await lerEntryComoJSON(zipfile, entry)
 
-          if (channelData && ehDM(channelData)) {
-            canaisDM++
-            const idsValidos = extrairIDsValidos(channelData.recipients)
-            for (const id of idsValidos) {
-              idsEncontrados.add(id)
-              contagemIDs.set(id, (contagemIDs.get(id) || 0) + 1)
+          if (channelData) {
+            if (channelData.guild && channelData.guild.id) {
+              const gId = String(channelData.guild.id)
+              const gName = String(channelData.guild.name || gId)
+              if (!serversMap.has(gId)) {
+                serversMap.set(gId, { id: gId, name: gName, channelCount: 1 })
+              } else {
+                serversMap.get(gId)!.channelCount++
+              }
+            }
+
+            if (ehDM(channelData)) {
+              canaisDM++
+              const idsValidos = extrairIDsValidos(channelData.recipients)
+              const chName = channelNamesMap.get(channelData.id) || channelData.name || null
+              for (const id of idsValidos) {
+                idsEncontrados.add(id)
+                contagemIDs.set(id, (contagemIDs.get(id) || 0) + 1)
+                if (!dmItemsMap.has(id)) {
+                  dmItemsMap.set(id, {
+                    id,
+                    name: chName || `Usuário ${id}`,
+                    type: 'dm',
+                    channelId: channelData.id,
+                  })
+                }
+              }
             }
           }
         }
@@ -157,16 +218,33 @@ function extrairIDsDoPackage(
             idDono = id
           }
         }
-        if (idDono) idsEncontrados.delete(idDono)
+        if (idDono) {
+          idsEncontrados.delete(idDono)
+          dmItemsMap.delete(idDono)
+        }
 
         for (const id of whitelist) {
           idsEncontrados.delete(id.trim())
+          dmItemsMap.delete(id.trim())
         }
+
+        const items: PackageItem[] = [
+          ...Array.from(dmItemsMap.values()),
+          ...Array.from(serversMap.values()).map(s => ({
+            id: s.id,
+            name: s.name,
+            type: 'server' as const,
+            channelCount: s.channelCount,
+          })),
+        ]
 
         resolve({
           ids: Array.from(idsEncontrados),
           totalCanais,
           totalDMs: canaisDM,
+          totalServers: serversMap.size,
+          items,
+          servers: Array.from(serversMap.values()),
         })
       })
 
@@ -199,7 +277,10 @@ export interface PackageAnalysis {
   totalUsers: number
   totalChannels: number
   totalDMs: number
+  totalServers: number
   userIds: string[]
+  items: PackageItem[]
+  servers: Array<{ id: string; name: string; channelCount: number }>
   progress: PackageProgressInfo | null
 }
 
@@ -218,7 +299,10 @@ export async function analisarPackage(cfg: { zipPath: string; whitelist: string[
     totalUsers: result.ids.length,
     totalChannels: result.totalCanais,
     totalDMs: result.totalDMs,
+    totalServers: result.totalServers,
     userIds: result.ids,
+    items: result.items,
+    servers: result.servers,
     progress: progressInfo.hasProgress ? progressInfo : null,
   }
 }
@@ -244,6 +328,10 @@ export async function limparPackage(cfg: LimparPackageConfig) {
   }
 
   let idsParaProcessar = result.ids
+  if (cfg.selectedIds && cfg.selectedIds.length > 0) {
+    const selectedSet = new Set(cfg.selectedIds)
+    idsParaProcessar = idsParaProcessar.filter((id) => selectedSet.has(id))
+  }
   let totalMensagensApagadas = 0
   let idsProcessados: string[] = []
 

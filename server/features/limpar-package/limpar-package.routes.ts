@@ -29,6 +29,8 @@ const limparSchema = z.object({
   fazerBackup: z.boolean().default(false),
   salvarMidiaLocal: z.boolean().default(false),
   continuar: z.boolean().default(false),
+  selectedIds: z.array(z.string()).optional(),
+  selectedServers: z.array(z.string()).optional(),
 })
 
 router.post('/limpar-package', validate(limparSchema), asyncHandler(async (req, res) => {

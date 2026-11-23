@@ -74,6 +74,8 @@ export interface LimparPackageConfig {
   fazerBackup: boolean
   salvarMidiaLocal: boolean
   continuar: boolean
+  selectedIds?: string[]
+  selectedServers?: string[]
 }
 
 export interface AbrirDmsConfig {

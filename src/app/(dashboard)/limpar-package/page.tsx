@@ -22,6 +22,10 @@ import {
   Trash2,
   Hash,
   SkipForward,
+  Server,
+  CheckSquare,
+  Copy,
+  Check,
 } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -43,11 +47,23 @@ type Phase =
   | "completed"
   | "error"
 
+interface PackageItem {
+  id: string
+  name: string
+  type: "dm" | "server"
+  channelId?: string
+  channelCount?: number
+  messageCount?: number
+}
+
 interface PackageAnalysis {
   totalUsers: number
   totalChannels: number
   totalDMs: number
+  totalServers: number
   userIds: string[]
+  items: PackageItem[]
+  servers: Array<{ id: string; name: string; channelCount: number }>
   progress: {
     hasProgress: boolean
     idsProcessados: number
@@ -73,6 +89,10 @@ export default function PaginaLimparPackage() {
   const [analysis, setAnalysis] = useState<PackageAnalysis | null>(null)
   const [starting, setStarting] = useState(false)
   const [analyzing, setAnalyzing] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [activeTab, setActiveTab] = useState<"dms" | "servers">("dms")
+  const [filterQuery, setFilterQuery] = useState("")
+  const [copiedId, setCopiedId] = useState<string | null>(null)
 
   const [taskId, setTaskId] = useState<string | null>(null)
   const taskIdRef = useRef<string | null>(null)
@@ -235,6 +255,12 @@ export default function PaginaLimparPackage() {
 
       const data = res.data as PackageAnalysis
       setAnalysis(data)
+      // Pre-select all users by default
+      const initialSelected = new Set<string>()
+      if (Array.isArray(data.userIds)) {
+        data.userIds.forEach((id) => initialSelected.add(id))
+      }
+      setSelectedIds(initialSelected)
       setPhase("ready")
 
       if (data.progress?.hasProgress) {
@@ -267,6 +293,7 @@ export default function PaginaLimparPackage() {
         fazerBackup,
         salvarMidiaLocal,
         continuar,
+        selectedIds: Array.from(selectedIds),
       })
 
       const data = res.data as {
@@ -474,34 +501,256 @@ export default function PaginaLimparPackage() {
         )}
 
         {analysis && phase === "ready" && (
-          <div className="space-y-4">
-            <div className="grid gap-4 sm:grid-cols-3">
+          <div className="space-y-6">
+            <div className="grid gap-4 sm:grid-cols-4">
               <div className="rounded-xl border border-border bg-card/40 p-5">
                 <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
                   <Users size={12} />
-                  Usuários encontrados
+                  Usuários / DMs
                 </div>
                 <div className="mt-2 text-3xl font-bold tabular-nums text-primary">
                   {analysis.totalUsers}
                 </div>
               </div>
+
+              <div className="rounded-xl border border-border bg-card/40 p-5">
+                <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
+                  <Server size={12} />
+                  Servidores
+                </div>
+                <div className="mt-2 text-3xl font-bold tabular-nums text-purple-400">
+                  {analysis.totalServers ?? analysis.servers?.length ?? 0}
+                </div>
+              </div>
+
               <div className="rounded-xl border border-border bg-card/40 p-5">
                 <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
                   <Hash size={12} />
-                  Canais analisados
+                  Canais Totais
                 </div>
                 <div className="mt-2 text-3xl font-bold tabular-nums text-foreground">
                   {analysis.totalChannels}
                 </div>
               </div>
+
               <div className="rounded-xl border border-border bg-card/40 p-5">
                 <div className="flex items-center gap-2 text-xs uppercase tracking-wider text-muted-foreground">
-                  <MessageSquare size={12} />
-                  DMs encontradas
+                  <CheckSquare size={12} />
+                  Selecionados p/ Deletar
                 </div>
-                <div className="mt-2 text-3xl font-bold tabular-nums text-foreground">
-                  {analysis.totalDMs}
+                <div className="mt-2 text-3xl font-bold tabular-nums text-emerald-400">
+                  {selectedIds.size}
                 </div>
+              </div>
+            </div>
+
+            {/* Interactive Package Items Selector Table */}
+            <div className="rounded-xl border border-border bg-card/40 p-6 space-y-4">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-border/40 pb-4">
+                <div>
+                  <h3 className="text-base font-bold text-foreground flex items-center gap-2">
+                    <CheckSquare className="h-4 w-4 text-primary" /> Seleção de Alvos no Pacote
+                  </h3>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Selecione exatamente quais DMs ou Servidores você deseja incluir na limpeza de mensagens.
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-2 w-full sm:w-auto">
+                  <div className="relative flex-1 sm:w-64">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Filtrar por nome ou ID..."
+                      value={filterQuery}
+                      onChange={(e) => setFilterQuery(e.target.value)}
+                      className="pl-9 h-9 text-xs"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Tabs & Bulk Action Buttons */}
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div className="flex gap-1.5 bg-secondary/30 p-1 rounded-lg border border-border/50">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("dms")}
+                    className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                      activeTab === "dms"
+                        ? "bg-primary text-primary-foreground shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    DMs & Contatos ({analysis.items?.filter((i) => i.type === "dm")?.length ?? analysis.totalUsers})
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("servers")}
+                    className={`px-3 py-1.5 rounded-md text-xs font-semibold transition-all ${
+                      activeTab === "servers"
+                        ? "bg-purple-600 text-white shadow-xs"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    Servidores ({analysis.servers?.length ?? analysis.totalServers ?? 0})
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const allCurrent = (analysis.items || [])
+                        .filter((i) => (activeTab === "dms" ? i.type === "dm" : i.type === "server"))
+                        .map((i) => i.id)
+                      setSelectedIds((prev) => {
+                        const next = new Set(prev)
+                        allCurrent.forEach((id) => next.add(id))
+                        return next
+                      })
+                    }}
+                    className="text-xs h-8"
+                  >
+                    Selecionar Todos
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const allCurrent = (analysis.items || [])
+                        .filter((i) => (activeTab === "dms" ? i.type === "dm" : i.type === "server"))
+                        .map((i) => i.id)
+                      setSelectedIds((prev) => {
+                        const next = new Set(prev)
+                        allCurrent.forEach((id) => next.delete(id))
+                        return next
+                      })
+                    }}
+                    className="text-xs h-8"
+                  >
+                    Desmarcar
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      const allCurrent = (analysis.items || [])
+                        .filter((i) => (activeTab === "dms" ? i.type === "dm" : i.type === "server"))
+                        .map((i) => i.id)
+                      setSelectedIds((prev) => {
+                        const next = new Set(prev)
+                        allCurrent.forEach((id) => {
+                          if (next.has(id)) next.delete(id)
+                          else next.add(id)
+                        })
+                        return next
+                      })
+                    }}
+                    className="text-xs h-8"
+                  >
+                    Inverter
+                  </Button>
+                </div>
+              </div>
+
+              {/* Items List */}
+              <div className="max-h-[380px] overflow-y-auto space-y-1.5 pr-1 border border-border/40 rounded-xl p-2 bg-secondary/10">
+                {(() => {
+                  const filtered = (analysis.items || []).filter((item) => {
+                    const matchType = activeTab === "dms" ? item.type === "dm" : item.type === "server"
+                    const q = filterQuery.toLowerCase().trim()
+                    const matchQ =
+                      !q ||
+                      item.name.toLowerCase().includes(q) ||
+                      item.id.toLowerCase().includes(q) ||
+                      (item.channelId && item.channelId.includes(q))
+                    return matchType && matchQ
+                  })
+
+                  if (filtered.length === 0) {
+                    return (
+                      <div className="py-12 text-center text-xs text-muted-foreground">
+                        {activeTab === "dms"
+                          ? "Nenhuma DM correspondente encontrada no pacote."
+                          : "Nenhum servidor correspondente encontrado no pacote."}
+                      </div>
+                    )
+                  }
+
+                  return filtered.map((item) => {
+                    const isSelected = selectedIds.has(item.id)
+                    return (
+                      <div
+                        key={item.id}
+                        onClick={() => {
+                          setSelectedIds((prev) => {
+                            const next = new Set(prev)
+                            if (next.has(item.id)) next.delete(item.id)
+                            else next.add(item.id)
+                            return next
+                          })
+                        }}
+                        className={`flex items-center justify-between gap-3 p-3 rounded-lg border text-xs cursor-pointer transition-all ${
+                          isSelected
+                            ? "bg-primary/10 border-primary/40 shadow-xs"
+                            : "bg-secondary/20 border-border/40 hover:bg-secondary/40 opacity-70"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <input
+                            type="checkbox"
+                            checked={isSelected}
+                            onChange={() => {}}
+                            className="h-4 w-4 rounded border-border text-primary focus:ring-primary shrink-0 pointer-events-none"
+                          />
+                          <div
+                            className={`h-8 w-8 rounded-lg flex items-center justify-center shrink-0 ${
+                              item.type === "dm"
+                                ? "bg-cyan-500/10 text-cyan-400 border border-cyan-500/20"
+                                : "bg-purple-500/10 text-purple-400 border border-purple-500/20"
+                            }`}
+                          >
+                            {item.type === "dm" ? <MessageSquare size={14} /> : <Server size={14} />}
+                          </div>
+                          <div className="overflow-hidden">
+                            <p className="font-semibold text-foreground truncate">{item.name}</p>
+                            <p className="text-[11px] font-mono text-muted-foreground flex items-center gap-1.5">
+                              <span>ID: {item.id}</span>
+                              {item.channelId && <span className="text-muted-foreground/50">| Ch: {item.channelId}</span>}
+                              {item.channelCount !== undefined && (
+                                <span className="text-purple-400">| {item.channelCount} canais</span>
+                              )}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              navigator.clipboard.writeText(item.id)
+                              setCopiedId(item.id)
+                              setTimeout(() => setCopiedId(null), 1500)
+                            }}
+                            className="h-7 px-2 rounded bg-secondary/50 hover:bg-secondary text-[10px] font-mono text-muted-foreground flex items-center gap-1"
+                          >
+                            {copiedId === item.id ? (
+                              <Check size={12} className="text-emerald-400" />
+                            ) : (
+                              <Copy size={12} />
+                            )}
+                            Copiar
+                          </button>
+                        </div>
+                      </div>
+                    )
+                  })
+                })()}
               </div>
             </div>
 
@@ -541,8 +790,8 @@ export default function PaginaLimparPackage() {
             <div className="rounded-xl border border-border bg-card/40 p-4">
               <Button
                 onClick={handleStart}
-                disabled={starting || !activeToken || analysis.totalUsers === 0}
-                className="h-11 w-full bg-red-500 text-white hover:bg-red-600 transition-colors"
+                disabled={starting || !activeToken || selectedIds.size === 0}
+                className="h-11 w-full bg-red-500 text-white hover:bg-red-600 transition-colors font-medium shadow-lg shadow-red-500/20"
               >
                 {starting ? (
                   <Loader2 size={18} className="mr-2 animate-spin" />
@@ -552,8 +801,8 @@ export default function PaginaLimparPackage() {
                 {starting
                   ? "Iniciando..."
                   : continuar && analysis.progress
-                    ? `Continuar (${analysis.progress.idsRestantes} restantes)`
-                    : `Iniciar Limpeza (${analysis.totalUsers} usuários)`
+                    ? `Continuar (${selectedIds.size} selecionados)`
+                    : `Iniciar Limpeza (${selectedIds.size} alvos selecionados)`
                 }
               </Button>
             </div>
