@@ -60,7 +60,7 @@ async function _fetchTokens() {
     const res = await api.getTokens()
     const data = (res.data || []) as TokenInfo[]
     _tokens = data
-    if (!_activeTokenId && data.length > 0) {
+    if ((!_activeTokenId || !data.some((t) => t.id === _activeTokenId)) && data.length > 0) {
       _activeTokenId = data[0].id
     }
     _loading = false
@@ -167,7 +167,7 @@ export function useTokens() {
     }
   }, [])
 
-  const activeToken = _tokens.find((t) => t.id === _activeTokenId) || null
+  const activeToken = _tokens.find((t) => t.id === _activeTokenId) || (_tokens.length > 0 ? _tokens[0] : null)
 
   return {
     tokens: _tokens,

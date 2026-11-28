@@ -23,9 +23,10 @@ import { useTasks } from "@/hooks/use-tasks"
 import { api } from "@/lib/api-client"
 
 export default function PaginaSeguirUsuario() {
-  const { activeToken } = useTokens()
+  const { activeToken, tokens, switchAccount } = useTokens()
   const { tasks, cancelTask } = useTasks()
 
+  const [selectedTokenId, setSelectedTokenId] = useState<string>("")
   const [targetId, setTargetId] = useState("")
   const [guildId, setGuildId] = useState("")
   const [selfMute, setSelfMute] = useState(false)
@@ -33,6 +34,11 @@ export default function PaginaSeguirUsuario() {
   const [stayOnDisconnect, setStayOnDisconnect] = useState(false)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
+
+  const effectiveToken =
+    (selectedTokenId ? tokens.find((t) => t.id === selectedTokenId) : null) ||
+    activeToken ||
+    (tokens.length > 0 ? tokens[0] : null)
 
   // Find active follow-member task if running
   const activeTask = tasks.find(
@@ -47,8 +53,8 @@ export default function PaginaSeguirUsuario() {
       return
     }
 
-    if (!activeToken) {
-      setError("Nenhuma conta Discord conectada.")
+    if (!effectiveToken) {
+      setError("Nenhuma conta Discord cadastrada no PhantomClear. Adicione uma conta no menu lateral para iniciar.")
       return
     }
 
@@ -56,8 +62,11 @@ export default function PaginaSeguirUsuario() {
     setError("")
 
     try {
+      // Auto-connect token to Gateway if needed
+      await api.connectToken(effectiveToken.id).catch(() => {})
+
       await api.runTool("call-utils", {
-        tokenId: activeToken.id,
+        tokenId: effectiveToken.id,
         action: "follow-member",
         anchorUserId: cleanId,
         guildId: guildId || undefined,
@@ -183,6 +192,39 @@ export default function PaginaSeguirUsuario() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleStart} className="space-y-4">
+              {tokens.length > 1 && (
+                <div className="space-y-1.5">
+                  <label className="text-xs font-semibold text-muted-foreground flex items-center gap-1.5">
+                    <User className="h-3.5 w-3.5 text-cyan-400" /> Selecionar Conta Discord
+                  </label>
+                  <select
+                    value={effectiveToken?.id || ""}
+                    onChange={(e) => {
+                      setSelectedTokenId(e.target.value)
+                      switchAccount(e.target.value).catch(() => {})
+                    }}
+                    disabled={Boolean(activeTask)}
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-xs font-medium text-foreground focus:outline-hidden focus:ring-1 focus:ring-primary"
+                  >
+                    {tokens.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.label || t.user?.username || t.id} {t.user?.tag ? `(@${t.user.tag})` : ""}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {tokens.length === 1 && effectiveToken && (
+                <div className="flex items-center justify-between p-2.5 rounded-lg border border-border/50 bg-secondary/15 text-xs">
+                  <span className="text-muted-foreground">Conta Seguidora:</span>
+                  <div className="flex items-center gap-1.5 font-semibold text-cyan-400">
+                    <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>{effectiveToken.label || effectiveToken.user?.username || "Conectada"}</span>
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-1.5">
                 <label className="text-xs font-semibold text-muted-foreground">ID do Membro Alvo</label>
                 <Input

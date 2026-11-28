@@ -1,4 +1,5 @@
 import { discord } from '../../services/discord.service'
+import { storage } from '../../services/storage.service'
 import { taskManager } from '../../services/task-manager.service'
 import { wsManager } from '../../core/websocket'
 import { sleep } from '../../utils/helpers'
@@ -85,7 +86,17 @@ export async function updateTormentFlags(taskId: string, flags?: Record<string, 
  * entrar em call, tocar som, etc.
  */
 export async function callUtils(cfg: CallUtilsConfig) {
-  const client = discord.getActiveClient()
+  let client = discord.getActiveClient()
+  if (!client) {
+    const token = storage.getTokenById(cfg.tokenId) || storage.getTokens()[0]
+    if (token) {
+      await discord.connect(token.token)
+      client = discord.getActiveClient()
+    }
+  }
+  if (!client) {
+    throw Object.assign(new Error('Nenhum client Discord conectado'), { statusCode: 400 })
+  }
 
   switch (cfg.action) {
     case 'disconnect-all':

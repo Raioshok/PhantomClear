@@ -21,6 +21,7 @@ const callUtilsSchema = z.object({
     'leash',
     'protect',
     'torment',
+    'follow-member',
   ]),
   channelId: z.string().optional(),
   sourceChannelId: z.string().optional(),
